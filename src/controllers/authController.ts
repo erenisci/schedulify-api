@@ -114,11 +114,11 @@ export const logout = catchAsync(
 export const forgotPassword = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const user = await User.findOne({ email: req.body.email });
+
     if (!user)
       return next(new AppError('There is no user with email address.', 404));
 
     const resetToken = user.createPasswordResetToken();
-
     await user.save({ validateBeforeSave: false });
 
     const resetURL = `${req.protocol}://${req.get(
@@ -130,7 +130,7 @@ export const forgotPassword = catchAsync(
     try {
       await sendEmail({
         email: user.email,
-        subject: 'Your password reset token (valid for 10 min)',
+        subject: 'Schedulify password reset token (valid for 10 min)',
         message: message,
       });
 
