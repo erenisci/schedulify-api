@@ -125,7 +125,7 @@ userSchema.methods.createPasswordResetToken = function () {
 };
 
 userSchema.pre<IUser>('findOneAndUpdate', function (next: Function) {
-  this.set({ updatedAt: Date.now() });
+  this.updatedAt = new Date(Date.now());
   next();
 });
 

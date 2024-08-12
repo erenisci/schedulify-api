@@ -40,7 +40,12 @@ const signToken = (id: string) => {
   });
 };
 
-const createSendToken = (user: IUser, statusCode: number, res: Response) => {
+const createSendToken = (
+  user: IUser,
+  message: string,
+  statusCode: number,
+  res: Response
+) => {
   const token = signToken(user._id);
 
   const cookieOptions: Cookie = {
@@ -59,6 +64,7 @@ const createSendToken = (user: IUser, statusCode: number, res: Response) => {
 
   res.status(statusCode).json({
     status: 'success',
+    message,
     token,
     data: user,
   });
@@ -68,7 +74,8 @@ export const signup = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const newUser = await User.create(req.body);
 
-    createSendToken(newUser, 201, res);
+    const message = 'You have successfully signed up!';
+    createSendToken(newUser, message, 201, res);
   }
 );
 
@@ -93,7 +100,8 @@ export const login = catchAsync(
       return next(new AppError('Invalid email or password', 401));
     }
 
-    createSendToken(user, 200, res);
+    const message = 'You have successfully logged in!';
+    createSendToken(user, message, 200, res);
   }
 );
 
@@ -175,7 +183,29 @@ export const resetPassword = catchAsync(
 
     await user.save();
 
-    createSendToken(user, 200, res);
+    const message = 'Your password has been successfully reset!';
+    createSendToken(user, message, 200, res);
+  }
+);
+
+export const updateMyPassword = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const user = await User.findById(req.user.id).select('+password');
+
+    if (
+      !(await user!.correctPassword(
+        req.body.passwordCurrent,
+        user!.password as string
+      ))
+    )
+      return next(new AppError('Your current password is wrong', 401));
+
+    user!.password = req.body.password;
+    user!.passwordConfirm = req.body.passwordConfirm;
+    await user!.save();
+
+    const message = 'Your password has been successfully updated!';
+    createSendToken(user!, message, 200, res);
   }
 );
 
@@ -230,5 +260,6 @@ export default {
   logout,
   forgotPassword,
   resetPassword,
+  updateMyPassword,
   protect,
 };

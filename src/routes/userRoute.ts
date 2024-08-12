@@ -5,8 +5,8 @@ import userController from '../controllers/userController';
 const router = express.Router();
 
 // FOR EVERYONE
-router.route('/signup').post(authController.signup);
-router.route('/login').post(authController.login);
+router.post('/signup', authController.signup);
+router.post('/login', authController.login);
 router.post('/forgotPassword', authController.forgotPassword);
 router.patch('/resetPassword/:token', authController.resetPassword);
 
@@ -21,18 +21,22 @@ router.use(authController.protect);
 // FOR USERS
 router.use(authController.restrictTo('user', 'admin', 'super-admin'));
 
-router.route('/logout').post(authController.logout);
+router.post('/logout', authController.logout);
+router.get('/getMe', userController.getMe);
+router.patch('/updateMe', userController.updateMe);
+router.delete('/deleteMe', userController.deleteMe);
+router.patch('/updateMyPassword', authController.updateMyPassword);
 
 // FOR ADMINS (Exclude Passwords)
 router.use(authController.restrictTo('admin', 'super-admin'));
 
-router.route('/').get(userController.getAllUsers);
-router.route('/:id').get(userController.getUser);
+router.get('/', userController.getAllUsers);
+router.get('/:id', userController.getUser);
 
 // FOR SUPER-ADMINS (Exclude Passwords)
 router.use(authController.restrictTo('super-admin'));
 
-router.route('/').post(userController.createUser);
+router.post('/', userController.createUser);
 router
   .route('/:id')
   .patch(userController.updateUser)

@@ -9,9 +9,10 @@ type IUser = Document & {
   passwordChangedAt?: Date;
   passwordResetToken?: string;
   passwordResetExpires?: Date;
-  role: 'user' | 'admin';
+  role: 'user' | 'admin' | 'super-admin' | undefined;
   active: boolean | undefined;
   createdAt: Date;
+  updatedAt: Date;
   correctPassword(
     candidatePassword: string,
     userPassword: string
