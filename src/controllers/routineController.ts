@@ -6,6 +6,7 @@ import Day from '../types/dayType';
 import IRoutine, { Activity } from '../types/routineType';
 import AppError from '../utils/appError';
 import catchAsync from '../utils/catchAsync';
+import { filterObj, filterObjError } from '../utils/filter';
 
 const validDays: Day[] = [
   'monday',
@@ -46,7 +47,21 @@ const validateActivityFields = (activity: Partial<Activity>) => {
 };
 
 // FOR USERS
-export const getActivities = catchAsync(
+export const getMyRoutines = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const routine = await Routine.findOne({ user: req.user.id });
+
+    if (!routine || !routine.allTimeActivities)
+      return next(new AppError('No activity found for this user!', 404));
+
+    res.status(200).json({
+      status: 'success',
+      data: routine,
+    });
+  }
+);
+
+export const getMyActivities = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const day: Day = req.params.day as Day;
 
@@ -65,7 +80,7 @@ export const getActivities = catchAsync(
   }
 );
 
-export const getActivity = catchAsync(
+export const getMyActivity = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const day: Day = req.params.day as Day;
 
@@ -88,7 +103,7 @@ export const getActivity = catchAsync(
   }
 );
 
-export const createActivity = catchAsync(
+export const createMyActivity = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const day: Day = req.params.day as Day;
 
@@ -124,14 +139,15 @@ export const createActivity = catchAsync(
   }
 );
 
-export const updateActivity = catchAsync(
+export const updateMyActivity = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    const updatedActivity = req.body;
-    validateActivityFields(updatedActivity);
-    validateTimeFormat(updatedActivity.time);
+    const updatedActivity = filterObj(req.body, 'time', 'activity');
+
+    if (Object.keys(updatedActivity).length === 0) return filterObjError(next);
+
+    if (updatedActivity.time) validateTimeFormat(updatedActivity.time);
 
     const day: Day = req.params.day as Day;
-
     const routine = await Routine.findOne({ user: req.user.id });
     if (!routine)
       return next(new AppError(`No activity found for ${day}!`, 404));
@@ -144,21 +160,26 @@ export const updateActivity = catchAsync(
     if (activityIndex === -1)
       return next(new AppError('Activity not found!', 404));
 
+    const currentActivity = routine[day][activityIndex];
+
     routine[day][activityIndex] = {
-      ...updatedActivity,
-      _id: routine[day][activityIndex]._id,
+      _id: currentActivity._id,
+      time: updatedActivity.time ? updatedActivity.time : currentActivity.time,
+      activity: updatedActivity.activity
+        ? updatedActivity.activity
+        : currentActivity.activity,
     };
 
     await routine.save();
 
     res.status(200).json({
       status: 'success',
-      data: updatedActivity,
+      data: routine[day][activityIndex],
     });
   }
 );
 
-export const deleteActivity = catchAsync(
+export const deleteMyActivity = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const day: Day = req.params.day as Day;
 
@@ -203,7 +224,7 @@ export const getUserRoutines = catchAsync(
   }
 );
 
-export const getUserRoutinesByDay = catchAsync(
+export const getUserActivitiesByDay = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const { userId, day } = req.params;
 
@@ -217,7 +238,7 @@ export const getUserRoutinesByDay = catchAsync(
 );
 
 // FOR SUPER-ADMINS
-export const getUserRoutinesByDayById = catchAsync(
+export const getUserActivityByDayAndID = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const { userId, day, routineId } = req.params;
 
@@ -239,7 +260,7 @@ export const getUserRoutinesByDayById = catchAsync(
   }
 );
 
-export const createUserRoutinesByDayById = catchAsync(
+export const createUserActivityByDayAndID = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const { userId, day } = req.params;
 
@@ -277,17 +298,19 @@ export const createUserRoutinesByDayById = catchAsync(
   }
 );
 
-export const updateUserRoutinesByDayById = catchAsync(
+export const updateUserActivityByDayAndID = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const { userId, routineId } = req.params;
-    const day: Day = req.params.day as Day;
-    const updatedActivity = req.body;
 
-    validateActivityFields(updatedActivity);
-    validateTimeFormat(updatedActivity.time);
+    const updatedActivity = filterObj(req.body, 'time', 'activity');
+
+    if (Object.keys(updatedActivity).length === 0) return filterObjError(next);
+
+    if (updatedActivity.time) validateTimeFormat(updatedActivity.time);
+
+    const day: Day = req.params.day as Day;
 
     let routine = await Routine.findOne({ user: userId });
-
     if (!routine || !routine[day])
       return next(new AppError(`No activity found for ${day}!`, 404));
 
@@ -300,21 +323,26 @@ export const updateUserRoutinesByDayById = catchAsync(
     if (routineIndex === -1)
       return next(new AppError('Activity not found!', 404));
 
+    const currentActivity = dayRoutines[routineIndex];
+
     dayRoutines[routineIndex] = {
-      _id: dayRoutines[routineIndex]._id,
-      ...updatedActivity,
+      _id: currentActivity._id,
+      time: updatedActivity.time ? updatedActivity.time : currentActivity.time,
+      activity: updatedActivity.activity
+        ? updatedActivity.activity
+        : currentActivity.activity,
     };
 
     await routine.save();
 
     res.status(200).json({
       status: 'success',
-      data: updatedActivity,
+      data: dayRoutines[routineIndex],
     });
   }
 );
 
-export const deleteUserRoutinesByDayById = catchAsync(
+export const deleteUserActivityByDayAndID = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const { userId, day, routineId } = req.params;
 
@@ -344,15 +372,16 @@ export const deleteUserRoutinesByDayById = catchAsync(
 );
 
 export default {
-  getActivities,
-  getActivity,
-  createActivity,
-  updateActivity,
-  deleteActivity,
+  getMyRoutines,
+  getMyActivities,
+  getMyActivity,
+  createMyActivity,
+  updateMyActivity,
+  deleteMyActivity,
   getUserRoutines,
-  getUserRoutinesByDay,
-  getUserRoutinesByDayById,
-  createUserRoutinesByDayById,
-  updateUserRoutinesByDayById,
-  deleteUserRoutinesByDayById,
+  getUserActivitiesByDay,
+  getUserActivityByDayAndID,
+  createUserActivityByDayAndID,
+  updateUserActivityByDayAndID,
+  deleteUserActivityByDayAndID,
 };

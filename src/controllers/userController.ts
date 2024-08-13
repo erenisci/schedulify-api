@@ -4,14 +4,7 @@ import IUser from '../types/userType';
 import APIFeatures from '../utils/apiFeatures';
 import AppError from '../utils/appError';
 import catchAsync from '../utils/catchAsync';
-
-const filterObj = (obj: Record<string, any>, ...allowedFields: string[]) => {
-  const newObj: Record<string, any> = {};
-  Object.keys(obj).forEach(el => {
-    if (allowedFields.includes(el)) newObj[el] = obj[el];
-  });
-  return newObj;
-};
+import { filterObj, filterObjError } from '../utils/filter';
 
 // FOR USERS
 export const getMe = catchAsync(
@@ -135,12 +128,7 @@ export const updateUser = catchAsync(
     );
 
     if (!filteredBody || Object.keys(filteredBody).length === 0)
-      return next(
-        new AppError(
-          'You must provide at least one field to update: name, surname, email, nationality, birthdate, password or role.',
-          404
-        )
-      );
+      return filterObjError(next);
 
     const updatedUser = await User.findByIdAndUpdate(
       req.params.id,
