@@ -31,12 +31,11 @@ const getRoutineForUserOnDay = async (userId: string, day: string) => {
   if (!isValidDay(day)) throw new AppError('Invalid day provided!', 400);
 
   const routine = await Routine.findOne({ user: userId });
-  if (!routine)
-    throw new AppError(`No routines found for user ${userId}!`, 404);
+  if (!routine) throw new AppError(`No activity found for ${day}!`, 404);
 
   const activities = routine[day as keyof IRoutine] as Activity[] | undefined;
   if (!Array.isArray(activities) || activities.length === 0)
-    throw new AppError(`No routines found for this user on ${day}!`, 404);
+    throw new AppError(`No activity found for ${day}!`, 404);
 
   return activities;
 };
@@ -54,7 +53,7 @@ export const getActivities = catchAsync(
     const routine = await Routine.findOne({ user: req.user.id });
 
     if (!routine || !routine[day])
-      return next(new AppError(`No routine found for ${day}!`, 404));
+      return next(new AppError(`No activity found for ${day}!`, 404));
 
     res.status(200).json({
       status: 'success',
@@ -73,7 +72,7 @@ export const getActivity = catchAsync(
     const routine = await Routine.findOne({ user: req.user.id });
 
     if (!routine || !routine[day])
-      return next(new AppError(`No routine found for ${day}!`, 404));
+      return next(new AppError(`No activity found for ${day}!`, 404));
 
     const activityId = req.params.id;
     const activity = routine[day].find(
@@ -131,11 +130,12 @@ export const updateActivity = catchAsync(
     validateActivityFields(updatedActivity);
     validateTimeFormat(updatedActivity.time);
 
+    const day: Day = req.params.day as Day;
+
     const routine = await Routine.findOne({ user: req.user.id });
     if (!routine)
-      return next(new AppError('No routine found for this user!', 404));
+      return next(new AppError(`No activity found for ${day}!`, 404));
 
-    const day: Day = req.params.day as Day;
     const activityId: string = req.params.id;
 
     const activityIndex = routine[day].findIndex(
@@ -160,11 +160,12 @@ export const updateActivity = catchAsync(
 
 export const deleteActivity = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
+    const day: Day = req.params.day as Day;
+
     const routine = await Routine.findOne({ user: req.user.id });
     if (!routine)
-      return next(new AppError('No routine found for this user!', 404));
+      return next(new AppError(`No activity found for ${day}!`, 404));
 
-    const day: Day = req.params.day as Day;
     const activityId: string = req.params.id;
 
     const activityIndex = routine[day].findIndex(
@@ -193,7 +194,7 @@ export const getUserRoutines = catchAsync(
     const routines = await Routine.find({ user: userId });
 
     if (!routines || !routines.length)
-      return next(new AppError('No routines found for this user!', 404));
+      return next(new AppError('No activity found for this user!', 404));
 
     res.status(200).json({
       status: 'success',
@@ -241,8 +242,10 @@ export const getUserRoutinesByDayById = catchAsync(
 export const createUserRoutinesByDayById = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const { userId, day } = req.params;
-    const activity = req.body;
 
+    if (!isValidDay(day)) throw new AppError('Invalid day provided!', 400);
+
+    const activity = req.body;
     validateActivityFields(activity);
     validateTimeFormat(activity.time);
 
@@ -286,7 +289,7 @@ export const updateUserRoutinesByDayById = catchAsync(
     let routine = await Routine.findOne({ user: userId });
 
     if (!routine || !routine[day])
-      return next(new AppError('Routine not found', 404));
+      return next(new AppError(`No activity found for ${day}!`, 404));
 
     const dayRoutines = routine[day] as Activity[];
 
@@ -295,7 +298,7 @@ export const updateUserRoutinesByDayById = catchAsync(
     );
 
     if (routineIndex === -1)
-      return next(new AppError('No routine found with the specified ID', 404));
+      return next(new AppError('Activity not found!', 404));
 
     dayRoutines[routineIndex] = {
       _id: dayRoutines[routineIndex]._id,
@@ -318,7 +321,7 @@ export const deleteUserRoutinesByDayById = catchAsync(
     let routine = await Routine.findOne({ user: userId });
 
     if (!routine || !(day in routine))
-      return next(new AppError('Routine not found', 404));
+      return next(new AppError(`No activity found for ${day}!`, 404));
 
     const dayRoutines = routine[day as keyof IRoutine] as Activity[];
 
@@ -327,7 +330,7 @@ export const deleteUserRoutinesByDayById = catchAsync(
     );
 
     if (routineIndex === -1)
-      return next(new AppError('No routine found with the specified ID', 404));
+      return next(new AppError('Activity not found!', 404));
 
     dayRoutines.splice(routineIndex, 1);
 
