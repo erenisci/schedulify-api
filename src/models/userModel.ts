@@ -24,6 +24,10 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Nationality is required'],
   },
+  birthdate: {
+    type: Date,
+    required: [true, 'Birthdate is required'],
+  },
   password: {
     type: String,
     required: [true, 'Password is required'],

@@ -12,7 +12,7 @@ export const restrictTo = (...roles: string[]) => {
   return (req: Request, res: Response, next: NextFunction) => {
     if (!roles.includes(req.user.role))
       return next(
-        new AppError('You do not have permission to perform this action', 403)
+        new AppError('You do not have permission to perform this action!', 403)
       );
 
     next();
@@ -89,16 +89,23 @@ export const login = catchAsync(
     const user = await User.findOne({ email: email }).select('+password');
 
     if (!user || !user.password)
-      return next(new AppError('Invalid email or password', 401));
+      return next(new AppError('Invalid email or password!', 401));
 
     const isPasswordCorrect = await user.correctPassword(
       password,
       user.password
     );
 
-    if (!isPasswordCorrect) {
-      return next(new AppError('Invalid email or password', 401));
-    }
+    if (!isPasswordCorrect)
+      return next(new AppError('Invalid email or password!', 401));
+
+    if (!user.active)
+      return next(
+        new AppError(
+          'Your account is inactive. Please contact with support.',
+          403
+        )
+      );
 
     const message = 'You have successfully logged in!';
     createSendToken(user, message, 200, res);
@@ -114,7 +121,7 @@ export const logout = catchAsync(
 
     res.status(200).json({
       status: 'success',
-      message: 'Logged out successfully',
+      message: 'You have successfully logged out!',
     });
   }
 );
@@ -198,7 +205,7 @@ export const updateMyPassword = catchAsync(
         user!.password as string
       ))
     )
-      return next(new AppError('Your current password is wrong', 401));
+      return next(new AppError('Your current password is wrong!', 401));
 
     user!.password = req.body.password;
     user!.passwordConfirm = req.body.passwordConfirm;

@@ -1,9 +1,9 @@
 import { NextFunction, Request, Response } from 'express';
 import User from '../models/userModel';
-import AppError from '../utils/appError';
-import catchAsync from '../utils/catchAsync';
 import IUser from '../types/userType';
 import APIFeatures from '../utils/apiFeatures';
+import AppError from '../utils/appError';
+import catchAsync from '../utils/catchAsync';
 
 const filterObj = (obj: Record<string, any>, ...allowedFields: string[]) => {
   const newObj: Record<string, any> = {};
@@ -128,6 +128,8 @@ export const updateUser = catchAsync(
       'name',
       'surname',
       'email',
+      'nationality',
+      'birthdate',
       'password',
       'role'
     );
@@ -135,7 +137,7 @@ export const updateUser = catchAsync(
     if (!filteredBody || Object.keys(filteredBody).length === 0)
       return next(
         new AppError(
-          'You must provide at least one field to update: name, surname, email, or password.',
+          'You must provide at least one field to update: name, surname, email, nationality, birthdate, password or role.',
           404
         )
       );
