@@ -7,12 +7,6 @@ import IRoutine, { Activity } from '../types/routineType';
 import AppError from '../utils/appError';
 import catchAsync from '../utils/catchAsync';
 
-const validateTimeFormat = (time: string) => {
-  const timeFormat = /^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$/;
-  if (!validator.matches(time, timeFormat))
-    throw new AppError('Time must be in HH:mm format!', 400);
-};
-
 const validDays: Day[] = [
   'monday',
   'tuesday',
@@ -22,6 +16,12 @@ const validDays: Day[] = [
   'saturday',
   'sunday',
 ];
+
+const validateTimeFormat = (time: string) => {
+  const timeFormat = /^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$/;
+  if (!validator.matches(time, timeFormat))
+    throw new AppError('Time must be in HH:mm format!', 400);
+};
 
 const isValidDay = (day: string): day is Day => {
   return validDays.includes(day as Day);
@@ -50,6 +50,7 @@ const validateActivityFields = (activity: Partial<Activity>) => {
 export const getActivities = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const day: Day = req.params.day as Day;
+
     const routine = await Routine.findOne({ user: req.user.id });
 
     if (!routine || !routine[day])
@@ -70,11 +71,11 @@ export const getActivity = catchAsync(
     const day: Day = req.params.day as Day;
 
     const routine = await Routine.findOne({ user: req.user.id });
+
     if (!routine || !routine[day])
       return next(new AppError(`No routine found for ${day}!`, 404));
 
     const activityId = req.params.id;
-
     const activity = routine[day].find(
       act => act._id.toString() === activityId
     );
@@ -91,10 +92,10 @@ export const getActivity = catchAsync(
 export const createActivity = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const day: Day = req.params.day as Day;
+
     let routine = await Routine.findOne({ user: req.user.id });
 
     const activity = req.body;
-
     validateActivityFields(activity);
     validateTimeFormat(activity.time);
 
@@ -127,7 +128,6 @@ export const createActivity = catchAsync(
 export const updateActivity = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const updatedActivity = req.body;
-
     validateActivityFields(updatedActivity);
     validateTimeFormat(updatedActivity.time);
 
@@ -160,13 +160,12 @@ export const updateActivity = catchAsync(
 
 export const deleteActivity = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    const day: Day = req.params.day as Day;
-    const activityId: string = req.params.id;
-
     const routine = await Routine.findOne({ user: req.user.id });
-
     if (!routine)
       return next(new AppError('No routine found for this user!', 404));
+
+    const day: Day = req.params.day as Day;
+    const activityId: string = req.params.id;
 
     const activityIndex = routine[day].findIndex(
       activity => activity._id.toString() === activityId
@@ -217,7 +216,6 @@ export const getUserRoutinesByDay = catchAsync(
 );
 
 // FOR SUPER-ADMINS
-
 export const getUserRoutinesByDayById = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const { userId, day, routineId } = req.params;
@@ -300,7 +298,7 @@ export const updateUserRoutinesByDayById = catchAsync(
       return next(new AppError('No routine found with the specified ID', 404));
 
     dayRoutines[routineIndex] = {
-      ...dayRoutines[routineIndex],
+      _id: dayRoutines[routineIndex]._id,
       ...updatedActivity,
     };
 
