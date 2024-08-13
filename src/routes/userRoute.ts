@@ -14,9 +14,6 @@ router.patch('/resetPassword/:token', authController.resetPassword);
 ----- PROTECT ROUTES FOR ONLY ACCOUNTS -----
 */
 router.use(authController.protect);
-/* 
------ PROTECT ROUTES FOR ONLY ACCOUNTS -----
-*/
 
 // FOR USERS
 router.use(authController.restrictTo('user', 'admin', 'super-admin'));
