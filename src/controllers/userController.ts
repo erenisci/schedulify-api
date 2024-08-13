@@ -2,6 +2,8 @@ import { NextFunction, Request, Response } from 'express';
 import User from '../models/userModel';
 import AppError from '../utils/appError';
 import catchAsync from '../utils/catchAsync';
+import IUser from '../types/userType';
+import APIFeatures from '../utils/apiFeatures';
 
 const filterObj = (obj: Record<string, any>, ...allowedFields: string[]) => {
   const newObj: Record<string, any> = {};
@@ -74,7 +76,12 @@ export const deleteMe = catchAsync(
 // FOR ADMINS
 export const getAllUsers = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    const users = await User.find().select('-password');
+    const features = new APIFeatures<IUser, IUser>(
+      User.find().select('-password'),
+      req.query
+    ).paginate();
+
+    const users = await features.query;
 
     if (!users || !users.length)
       return next(new AppError('Users not found!', 404));

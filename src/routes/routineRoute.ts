@@ -24,13 +24,20 @@ router
   .delete(routineController.deleteActivity);
 
 // FOR ADMINS
-/* 
------ NO ADMIN ROUTES FOR NOW -----
-*/
+router.use(authController.restrictTo('admin', 'super-admin'));
+
+router.get('/:userId', routineController.getUserRoutines);
+router.get('/:userId/:day', routineController.getUserRoutinesByDay);
 
 // FOR SUPER-ADMINS
 router.use(authController.restrictTo('super-admin'));
 
-router.get('/', routineController.getAllRoutines);
+router.post('/:userId/:day', routineController.createUserRoutinesByDayById);
+
+router
+  .route('/:userId/:day/:routineId')
+  .get(routineController.getUserRoutinesByDayById)
+  .patch(routineController.updateUserRoutinesByDayById)
+  .delete(routineController.deleteUserRoutinesByDayById);
 
 export default router;

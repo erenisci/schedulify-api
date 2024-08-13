@@ -1,12 +1,13 @@
 import mongoose from 'mongoose';
 
-type Activity = {
+export type Activity = {
   _id: mongoose.Types.ObjectId;
   time: string;
   activity: string;
 };
 
 type IRoutine = {
+  _id: mongoose.Types.ObjectId;
   user: mongoose.Types.ObjectId;
   allTimeActivities: number;
   monday: Activity[];
