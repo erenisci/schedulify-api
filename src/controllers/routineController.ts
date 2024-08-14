@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import mongoose from 'mongoose';
 import validator from 'validator';
+
 import Routine from '../models/routineModel';
 import Day from '../types/dayType';
 import IRoutine, { Activity } from '../types/routineType';
@@ -143,7 +144,8 @@ export const updateMyActivity = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const updatedActivity = filterObj(req.body, 'time', 'activity');
 
-    if (Object.keys(updatedActivity).length === 0) return filterObjError(next);
+    if (Object.keys(updatedActivity).length === 0)
+      return filterObjError(next, 'time or activity.');
 
     if (updatedActivity.time) validateTimeFormat(updatedActivity.time);
 
@@ -304,7 +306,8 @@ export const updateUserActivityByDayAndID = catchAsync(
 
     const updatedActivity = filterObj(req.body, 'time', 'activity');
 
-    if (Object.keys(updatedActivity).length === 0) return filterObjError(next);
+    if (Object.keys(updatedActivity).length === 0)
+      return filterObjError(next, 'time or activity.');
 
     if (updatedActivity.time) validateTimeFormat(updatedActivity.time);
 

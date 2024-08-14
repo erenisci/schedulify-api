@@ -4,6 +4,9 @@ type IUser = Document & {
   _id: string;
   name: string;
   email: string;
+  nationality: string;
+  birthdate: Date;
+  gender: string;
   password: string | undefined;
   passwordConfirm?: string | undefined;
   passwordChangedAt?: Date;

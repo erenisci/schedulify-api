@@ -1,4 +1,5 @@
 import mongoose, { Model } from 'mongoose';
+
 import Day from '../types/dayType';
 import IRoutine from '../types/routineType';
 import activitySchema from './activityModel';

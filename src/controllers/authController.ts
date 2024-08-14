@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 import { NextFunction, Request, Response } from 'express';
 import jwt, { JwtPayload } from 'jsonwebtoken';
+
 import User from '../models/userModel';
 import Cookie from '../types/cookieType';
 import IUser from '../types/userType';

@@ -1,4 +1,5 @@
 import express from 'express';
+
 import authController from '../controllers/authController';
 import routineController from '../controllers/routineController';
 
@@ -12,15 +13,15 @@ router.use(authController.protect);
 // FOR USERS
 router.use(authController.restrictTo('user', 'admin', 'super-admin'));
 
-router.get('/myRoutines', routineController.getMyRoutines);
+router.get('/my-routines', routineController.getMyRoutines);
 
 router
-  .route('/myRoutines/:day')
+  .route('/my-routines/:day')
   .get(routineController.getMyActivities)
   .post(routineController.createMyActivity);
 
 router
-  .route('/myRoutines/:day/:id')
+  .route('/my-routines/:day/:id')
   .get(routineController.getMyActivity)
   .patch(routineController.updateMyActivity)
   .delete(routineController.deleteMyActivity);

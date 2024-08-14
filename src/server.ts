@@ -1,7 +1,7 @@
 import dotenv from 'dotenv';
+import mongoose from 'mongoose';
 dotenv.config({ path: './config.env' });
 
-import mongoose from 'mongoose';
 import app from './app';
 
 const DB = process.env.DATABASE!.replace(

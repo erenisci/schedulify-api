@@ -1,4 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
+
 import User from '../models/userModel';
 import IUser from '../types/userType';
 import APIFeatures from '../utils/apiFeatures';
@@ -123,12 +124,16 @@ export const updateUser = catchAsync(
       'email',
       'nationality',
       'birthdate',
+      'gender',
       'password',
       'role'
     );
 
     if (!filteredBody || Object.keys(filteredBody).length === 0)
-      return filterObjError(next);
+      return filterObjError(
+        next,
+        'name, surname, email, nationality, birthdate, password or role.'
+      );
 
     const updatedUser = await User.findByIdAndUpdate(
       req.params.id,

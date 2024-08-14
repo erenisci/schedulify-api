@@ -1,4 +1,5 @@
 import { NextFunction } from 'express';
+
 import AppError from './appError';
 
 export const filterObj = (
@@ -12,12 +13,9 @@ export const filterObj = (
   return newObj;
 };
 
-export const filterObjError = (next: NextFunction) => {
+export const filterObjError = (next: NextFunction, msg: string) => {
   return next(
-    new AppError(
-      'You must provide at least one field to update: time or activity.',
-      400
-    )
+    new AppError(`You must provide at least one field to update: ${msg}`, 400)
   );
 };
 

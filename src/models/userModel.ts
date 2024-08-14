@@ -2,6 +2,7 @@ import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import mongoose, { Model } from 'mongoose';
 import validator from 'validator';
+
 import IUser from '../types/userType';
 
 const userSchema = new mongoose.Schema({
@@ -27,6 +28,10 @@ const userSchema = new mongoose.Schema({
   birthdate: {
     type: Date,
     required: [true, 'Birthdate is required'],
+  },
+  gender: {
+    type: String,
+    enum: ['male', 'female', 'none'],
   },
   password: {
     type: String,
