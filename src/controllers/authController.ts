@@ -21,11 +21,8 @@ export const restrictTo = (...roles: string[]) => {
 const jwtVerifyPromisified = (token: string, secret: string): Promise<JwtPayload> => {
   return new Promise((resolve, reject) => {
     jwt.verify(token, secret, {}, (err, payload) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(payload as JwtPayload);
-      }
+      if (err) reject(err);
+      else resolve(payload as JwtPayload);
     });
   });
 };
@@ -68,15 +65,12 @@ export const signup = catchAsync(async (req: Request, res: Response, next: NextF
 
 export const login = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
   const { email, password } = req.body;
-
   if (!email || !password) return next(new AppError('Please provide email and password!', 400));
 
   const user = await User.findOne({ email: email }).select('+password');
-
   if (!user || !user.password) return next(new AppError('Invalid email or password!', 401));
 
   const isPasswordCorrect = await user.correctPassword(password, user.password);
-
   if (!isPasswordCorrect) return next(new AppError('Invalid email or password!', 401));
 
   if (!user.active)
@@ -100,8 +94,10 @@ export const logout = catchAsync(async (req: Request, res: Response, next: NextF
 
 export const forgotPassword = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    const user = await User.findOne({ email: req.body.email });
+    const email = req.body.email;
+    if (!email) return next(new AppError('Please provide email!', 400));
 
+    const user = await User.findOne({ email });
     if (!user) return next(new AppError('There is no user with email address.', 404));
 
     const resetToken = user.createPasswordResetToken();
@@ -157,44 +153,45 @@ export const resetPassword = catchAsync(async (req: Request, res: Response, next
 
 export const updateMyPassword = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    const user = await User.findById(req.user.id).select('+password');
+    const { passwordCurrent, passwordNew, passwordConfirm } = req.body;
 
-    if (!(await user!.correctPassword(req.body.passwordCurrent, user!.password as string)))
+    if (!passwordCurrent || !passwordNew || !passwordConfirm)
+      return next(new AppError('Please provide all password fields.', 400));
+
+    const user = await User.findById(req.user.id).select('+password');
+    if (!user || !(await user!.correctPassword(req.body.passwordCurrent, user!.password as string)))
       return next(new AppError('Your current password is wrong!', 401));
 
-    user!.password = req.body.password;
-    user!.passwordConfirm = req.body.passwordConfirm;
-    await user!.save();
+    user.password = req.body.passwordNew;
+    user.passwordConfirm = req.body.passwordConfirm;
+    await user.save();
 
     const message = 'Your password has been successfully updated!';
-    createSendToken(user!, message, 200, res);
+    createSendToken(user, message, 200, res);
   }
 );
 
 export const protect = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
   let token: string | undefined;
 
-  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer'))
     token = req.headers.authorization.split(' ')[1];
-  } else if (req.cookies.jwt) {
-    token = req.cookies.jwt;
-  }
+  else if (req.cookies.jwt) token = req.cookies.jwt;
 
   if (!token) return next(new AppError('You are not logged in! Please log in to get access.', 401));
 
   const decoded = await jwtVerifyPromisified(token, process.env.JWT_SECRET!);
 
   const currentUser = (await User.findById((decoded as JwtPayload).id)) as IUser;
-
   if (!currentUser)
     return next(new AppError('The user belonging to this token does no longer exist.', 401));
 
-  if (decoded.iat && currentUser.changedPasswordAfter(decoded.iat)) {
+  if (decoded.iat && currentUser.changedPasswordAfter(decoded.iat))
     return next(new AppError('User recently changed password! Please log in again', 401));
-  }
 
   req.user = currentUser;
   res.locals.user = currentUser;
+
   next();
 });
 

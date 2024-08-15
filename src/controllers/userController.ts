@@ -25,7 +25,21 @@ export const updateMe = catchAsync(async (req: Request, res: Response, next: Nex
       new AppError('This route is not for password updates. Please use /updateMyPassword', 400)
     );
 
-  const filteredBody = filterObj(req.body, 'name', 'email');
+  const filteredBody = filterObj(
+    req.body,
+    'name',
+    'surname',
+    'email',
+    'nationality',
+    'birthdate',
+    'gender'
+  );
+  if (Object.keys(filteredBody).length === 0) {
+    return filterObjError(
+      next,
+      'At least one of name, surname, email, nationality, birthdate, or gender must be provided.'
+    );
+  }
 
   const updatedUser = await User.findByIdAndUpdate(req.user.id, filteredBody, {
     new: true,
