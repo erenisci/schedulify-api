@@ -1,22 +1,18 @@
 import mongoose from 'mongoose';
 
-export type Activity = {
-  _id: mongoose.Types.ObjectId;
-  time: string;
-  activity: string;
-};
+import IActivity from './activityType';
 
 type IRoutine = {
   _id: mongoose.Types.ObjectId;
   user: mongoose.Types.ObjectId;
   allTimeActivities: number;
-  monday: Activity[];
-  tuesday: Activity[];
-  wednesday: Activity[];
-  thursday: Activity[];
-  friday: Activity[];
-  saturday: Activity[];
-  sunday: Activity[];
+  monday: IActivity[];
+  tuesday: IActivity[];
+  wednesday: IActivity[];
+  thursday: IActivity[];
+  friday: IActivity[];
+  saturday: IActivity[];
+  sunday: IActivity[];
 };
 
 export default IRoutine;

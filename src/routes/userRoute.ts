@@ -35,9 +35,6 @@ router.get('/:id', userController.getUser);
 router.use(authController.restrictTo('super-admin'));
 
 router.post('/', userController.createUser);
-router
-  .route('/:id')
-  .patch(userController.updateUser)
-  .delete(userController.deleteUser);
+router.route('/:id').patch(userController.updateUser).delete(userController.deleteUser);
 
 export default router;

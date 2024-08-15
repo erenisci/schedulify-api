@@ -1,5 +1,7 @@
 import { Document } from 'mongoose';
 
+import Role from '../enums/roleEnum';
+
 type IUser = Document & {
   _id: string;
   name: string;
@@ -12,14 +14,11 @@ type IUser = Document & {
   passwordChangedAt?: Date;
   passwordResetToken?: string;
   passwordResetExpires?: Date;
-  role: 'user' | 'admin' | 'super-admin' | undefined;
+  role: Role | undefined;
   active: boolean | undefined;
   createdAt: Date;
   updatedAt: Date;
-  correctPassword(
-    candidatePassword: string,
-    userPassword: string
-  ): Promise<boolean>;
+  correctPassword(candidatePassword: string, userPassword: string): Promise<boolean>;
   changedPasswordAfter: (jwtTimestamp: number) => boolean;
   createPasswordResetToken: () => string;
 };

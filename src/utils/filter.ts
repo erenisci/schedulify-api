@@ -2,10 +2,7 @@ import { NextFunction } from 'express';
 
 import AppError from './appError';
 
-export const filterObj = (
-  obj: Record<string, any>,
-  ...allowedFields: string[]
-) => {
+export const filterObj = (obj: Record<string, any>, ...allowedFields: string[]) => {
   const newObj: Record<string, any> = {};
   Object.keys(obj).forEach(el => {
     if (allowedFields.includes(el)) newObj[el] = obj[el];
@@ -14,9 +11,7 @@ export const filterObj = (
 };
 
 export const filterObjError = (next: NextFunction, msg: string) => {
-  return next(
-    new AppError(`You must provide at least one field to update: ${msg}`, 400)
-  );
+  return next(new AppError(msg, 400));
 };
 
 export default { filterObj, filterObjError };

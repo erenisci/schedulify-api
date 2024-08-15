@@ -3,45 +3,47 @@ import crypto from 'crypto';
 import mongoose, { Model } from 'mongoose';
 import validator from 'validator';
 
+import Gender from '../enums/genderEnum';
+import Role from '../enums/roleEnum';
 import IUser from '../types/userType';
 
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
-    required: [true, 'Name is required'],
+    required: [true, 'Name is required!'],
   },
   surname: {
     type: String,
-    required: [true, 'Surname is required'],
+    required: [true, 'Surname is required!'],
   },
   email: {
     type: String,
-    required: [true, 'Email is required'],
+    required: [true, 'Email is required!'],
     unique: true,
     lowercase: true,
     validate: [validator.isEmail, 'Please provide a valid email!'],
   },
   nationality: {
     type: String,
-    required: [true, 'Nationality is required'],
+    required: [true, 'Nationality is required!'],
   },
   birthdate: {
     type: Date,
-    required: [true, 'Birthdate is required'],
+    required: [true, 'Birthdate is required!'],
   },
   gender: {
     type: String,
-    enum: ['male', 'female', 'none'],
+    enum: Object.values(Gender),
   },
   password: {
     type: String,
-    required: [true, 'Password is required'],
+    required: [true, 'Password is required!'],
     minlength: 8,
     select: false,
   },
   passwordConfirm: {
     type: String,
-    required: [true, 'Please confirm your password'],
+    required: [true, 'Please confirm your password!'],
     minlength: 8,
     validate: {
       validator: function (this: IUser, el: string): boolean {
@@ -61,7 +63,7 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['user', 'admin', 'super-admin'],
+    enum: Object.values(Role),
     default: 'user',
   },
   active: {
@@ -88,18 +90,15 @@ userSchema.pre<IUser>('save', async function (next) {
 });
 
 // Hash for only admin updates
-userSchema.pre<mongoose.Query<IUser, IUser>>(
-  'findOneAndUpdate',
-  async function (next: Function) {
-    const update = this.getUpdate() as Partial<IUser>;
+userSchema.pre<mongoose.Query<IUser, IUser>>('findOneAndUpdate', async function (next: Function) {
+  const update = this.getUpdate() as Partial<IUser>;
 
-    if (update.password) {
-      update.password = await bcrypt.hash(update.password, 12);
-    }
-
-    next();
+  if (update.password) {
+    update.password = await bcrypt.hash(update.password, 12);
   }
-);
+
+  next();
+});
 
 userSchema.pre<IUser>('save', function (next: Function) {
   if (!this.isModified('password') || this.isNew) return next();
@@ -127,10 +126,7 @@ userSchema.methods.changedPasswordAfter = function (JWTTimestamp: number) {
 userSchema.methods.createPasswordResetToken = function () {
   const resetToken = crypto.randomBytes(32).toString('hex');
 
-  this.passwordResetToken = crypto
-    .createHash('sha256')
-    .update(resetToken)
-    .digest('hex');
+  this.passwordResetToken = crypto.createHash('sha256').update(resetToken).digest('hex');
 
   this.passwordResetExpires = Date.now() + 10 * 60 * 1000;
 

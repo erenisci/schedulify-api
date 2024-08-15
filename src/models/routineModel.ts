@@ -1,8 +1,8 @@
 import mongoose, { Model } from 'mongoose';
 
-import Day from '../types/dayType';
+import Day from '../enums/dayeEnum';
 import IRoutine from '../types/routineType';
-import activitySchema from './activityModel';
+import { activitySchema } from './activityModel';
 
 const routineSchema = new mongoose.Schema({
   user: {
@@ -45,20 +45,10 @@ const routineSchema = new mongoose.Schema({
 });
 
 routineSchema.pre<IRoutine>('save', function (next) {
-  const days: Day[] = [
-    'monday',
-    'tuesday',
-    'wednesday',
-    'thursday',
-    'friday',
-    'saturday',
-    'sunday',
-  ];
-
-  for (const day of days) {
+  for (const day of Object.values(Day)) {
     if (this[day]) {
       this[day].sort((a, b) => {
-        return a.time.localeCompare(b.time);
+        return a.startTime.localeCompare(b.startTime);
       });
     }
   }
@@ -66,9 +56,6 @@ routineSchema.pre<IRoutine>('save', function (next) {
   next();
 });
 
-const Routine: Model<IRoutine> = mongoose.model<IRoutine>(
-  'Routine',
-  routineSchema
-);
+const Routine: Model<IRoutine> = mongoose.model<IRoutine>('Routine', routineSchema);
 
 export default Routine;

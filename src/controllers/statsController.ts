@@ -1,82 +1,80 @@
 import { NextFunction, Request, Response } from 'express';
 
+import Gender from '../enums/genderEnum';
 import Routine from '../models/routineModel';
 import User from '../models/userModel';
-import Gender from '../types/genderType';
 import AppError from '../utils/appError';
 import catchAsync from '../utils/catchAsync';
 
-export const getUserStats = catchAsync(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const totalUsers = await User.countDocuments();
-    if (!totalUsers) return next(new AppError('No users found!', 404));
+export const getUserStats = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  const totalUsers = await User.countDocuments();
+  if (!totalUsers) return next(new AppError('No users found!', 404));
 
-    const activeUsers = await User.countDocuments({ active: true });
-    const passiveUsers = await User.countDocuments({ active: false });
+  const activeUsers = await User.countDocuments({ active: true });
+  const passiveUsers = await User.countDocuments({ active: false });
 
-    const userStats = await User.aggregate([
-      {
-        $group: {
-          _id: {
-            nationality: '$nationality',
-            gender: '$gender',
-          },
-          count: { $sum: 1 },
+  const userStats = await User.aggregate([
+    {
+      $group: {
+        _id: {
+          nationality: '$nationality',
+          gender: '$gender',
         },
+        count: { $sum: 1 },
       },
-      {
-        $group: {
-          _id: '$_id.nationality',
-          genders: {
-            $push: {
-              gender: '$_id.gender',
-              count: '$count',
-            },
+    },
+    {
+      $group: {
+        _id: '$_id.nationality',
+        genders: {
+          $push: {
+            gender: '$_id.gender',
+            count: '$count',
           },
-          total: { $sum: '$count' },
         },
+        total: { $sum: '$count' },
       },
-    ]);
+    },
+  ]);
 
-    const nationalityCounts: Record<
-      string,
-      { total: number; female: number; male: number; none: number }
-    > = {};
+  const nationalityCounts: Record<
+    string,
+    { total: number; female: number; male: number; none: number }
+  > = {};
 
-    userStats.forEach(
-      ({
-        _id,
-        genders,
+  userStats.forEach(
+    ({
+      _id,
+      genders,
+      total,
+    }: {
+      _id: string;
+      genders: { gender: Gender; count: number }[];
+      total: number;
+    }) => {
+      nationalityCounts[_id] = {
         total,
-      }: {
-        _id: string;
-        genders: { gender: Gender; count: number }[];
-        total: number;
-      }) => {
-        nationalityCounts[_id] = {
-          total,
-          male: 0,
-          female: 0,
-          none: 0,
-        };
+        male: 0,
+        female: 0,
+        none: 0,
+      };
 
-        genders.forEach(({ gender, count }) => {
-          nationalityCounts[_id][gender] = count;
-        });
-      }
-    );
+      genders.forEach(({ gender, count }) => {
+        nationalityCounts[_id][gender] = count;
+      });
+    }
+  );
 
-    res.status(200).json({
-      status: 'success',
-      data: {
-        totalUsers,
-        activeUsers,
-        passiveUsers,
-        nationalityCounts,
-      },
-    });
-  }
-);
+  res.status(200).json({
+    status: 'success',
+    data: {
+      totalUsers,
+      activeUsers,
+      passiveUsers,
+      nationalityCounts,
+    },
+  });
+});
 
 export const getUserBirthdateStats = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
