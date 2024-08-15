@@ -153,7 +153,8 @@ export const getMyActivities = catchAsync(
     if (!isValidDay(day)) return next(new AppError(`Invalid day: ${day}`, 400));
 
     const routine = await Routine.findOne({ user: req.user.id });
-    if (!routine || !routine[day]) return next(new AppError(`No activity found for ${day}!`, 404));
+    if (!routine || !routine[day] || !routine[day].length)
+      return next(new AppError(`No activity found for ${day}!`, 404));
 
     res.status(200).json({
       status: 'success',
@@ -174,7 +175,6 @@ export const getMyActivity = catchAsync(async (req: Request, res: Response, next
 
   const activityId = req.params.routineId;
   const activity = routine[day].find(act => act._id.toString() === activityId);
-
   if (!activity) return next(new AppError('Activity not found!', 404));
 
   res.status(200).json({
