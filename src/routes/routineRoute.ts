@@ -21,7 +21,7 @@ router
   .post(routineController.createMyActivity);
 
 router
-  .route('/my-routines/:day/:id')
+  .route('/my-routines/:day/:routineId')
   .get(routineController.getMyActivity)
   .patch(routineController.updateMyActivity)
   .delete(routineController.deleteMyActivity);

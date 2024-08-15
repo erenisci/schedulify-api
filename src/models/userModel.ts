@@ -89,13 +89,10 @@ userSchema.pre<IUser>('save', async function (next) {
   next();
 });
 
-// Hash for only admin updates
 userSchema.pre<mongoose.Query<IUser, IUser>>('findOneAndUpdate', async function (next: Function) {
   const update = this.getUpdate() as Partial<IUser>;
 
-  if (update.password) {
-    update.password = await bcrypt.hash(update.password, 12);
-  }
+  if (update.password) update.password = await bcrypt.hash(update.password, 12);
 
   next();
 });

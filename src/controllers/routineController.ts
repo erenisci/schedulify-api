@@ -98,6 +98,8 @@ const updateActivity = async (
   if (!routine) throw new AppError('No routine found for this user!', 404);
 
   const activityIndex = routine[day].findIndex(activity => activity._id.toString() === activityId);
+  routine[day].findIndex(activity => console.log(activity._id.toString()));
+
   if (activityIndex === -1) throw new AppError('Activity not found!', 404);
 
   const currentActivity = routine[day][activityIndex];
@@ -170,7 +172,7 @@ export const getMyActivity = catchAsync(async (req: Request, res: Response, next
   const routine = await Routine.findOne({ user: req.user.id });
   if (!routine || !routine[day]) return next(new AppError(`No activity found for ${day}!`, 404));
 
-  const activityId = req.params.id;
+  const activityId = req.params.routineId;
   const activity = routine[day].find(act => act._id.toString() === activityId);
 
   if (!activity) return next(new AppError('Activity not found!', 404));
@@ -219,7 +221,7 @@ export const updateMyActivity = catchAsync(
     if (updatedActivity.startTime) isValidTimeFormat(updatedActivity.startTime);
     if (updatedActivity.endTime) isValidTimeFormat(updatedActivity.endTime);
 
-    const activityId = req.params.id;
+    const activityId = req.params.routineId;
 
     const activity = await updateActivity(req.user.id, day, activityId, updatedActivity);
 
@@ -238,7 +240,7 @@ export const deleteMyActivity = catchAsync(
     const routine = await Routine.findOne({ user: req.user.id });
     if (!routine) return next(new AppError(`No activity found for ${day}!`, 404));
 
-    const activityId: string = req.params.id;
+    const activityId = req.params.routineId;
     const activityIndex = routine[day].findIndex(
       activity => activity._id.toString() === activityId
     );
@@ -349,9 +351,9 @@ export const updateUserActivityByDayAndID = catchAsync(
     if (updatedActivity.startTime) isValidTimeFormat(updatedActivity.startTime);
     if (updatedActivity.endTime) isValidTimeFormat(updatedActivity.endTime);
 
-    const { userId, id } = req.params;
+    const { userId, routineId } = req.params;
 
-    const activity = await updateActivity(userId, day, id, updatedActivity);
+    const activity = await updateActivity(userId, day, routineId, updatedActivity);
 
     res.status(200).json({
       status: 'success',
