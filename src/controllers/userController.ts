@@ -70,17 +70,16 @@ export const deleteMe = catchAsync(async (req: Request, res: Response, next: Nex
 
 // FOR ADMINS
 export const getAllUsers = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-  const features = new APIFeatures<IUser, IUser>(
-    User.find().select('-password'),
-    req.query
-  ).paginate();
+  const features = new APIFeatures<IUser>(User.find().select('-password'), req.query, User);
 
-  const users = await features.query;
+  const { results: users, totalPages, currentPage } = await features.paginate();
 
   if (!users || !users.length) return next(new AppError('Users not found!', 404));
 
   res.status(200).json({
     status: 'success',
+    currentPage,
+    totalPages,
     results: users.length,
     data: users,
   });

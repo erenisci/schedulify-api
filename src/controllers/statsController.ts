@@ -1,84 +1,139 @@
 import { NextFunction, Request, Response } from 'express';
 
 import Gender from '../enums/genderEnum';
+import Activity from '../models/activityModel';
 import Routine from '../models/routineModel';
 import User from '../models/userModel';
+import APIFeatures from '../utils/apiFeatures';
 import AppError from '../utils/appError';
 import catchAsync from '../utils/catchAsync';
 
-export const getUserStats = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-  const totalUsers = await User.countDocuments();
-  if (!totalUsers) return next(new AppError('No users found!', 404));
+export const getSummaryStats = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {}
+);
 
-  const activeUsers = await User.countDocuments({ active: true });
-  const passiveUsers = await User.countDocuments({ active: false });
-
-  const userStats = await User.aggregate([
-    {
-      $group: {
-        _id: {
-          nationality: '$nationality',
-          gender: '$gender',
+export const getActivityStats = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const activityStats = await Activity.aggregate([
+      {
+        $group: {
+          _id: '$category',
+          totalDuration: { $sum: '$duration' },
+          totalActivity: { $sum: 1 },
         },
-        count: { $sum: 1 },
       },
-    },
-    {
-      $group: {
-        _id: '$_id.nationality',
-        genders: {
-          $push: {
-            gender: '$_id.gender',
-            count: '$count',
+      {
+        $project: {
+          _id: 0,
+          categoryName: '$_id',
+          totalDuration: 1,
+          totalActivity: 1,
+          durationPerActivity: {
+            $cond: {
+              if: { $eq: ['$totalActivity', 0] },
+              then: 0,
+              else: { $divide: ['$totalDuration', '$totalActivity'] },
+            },
           },
         },
-        total: { $sum: '$count' },
       },
-    },
-  ]);
+      {
+        $sort: { totalDuration: -1 },
+      },
+    ]);
 
-  const nationalityCounts: Record<
-    string,
-    { total: number; female: number; male: number; none: number }
-  > = {};
+    if (!activityStats.length) return next(new AppError('No activities found!', 404));
 
-  userStats.forEach(
-    ({
-      _id,
-      genders,
-      total,
-    }: {
-      _id: string;
-      genders: { gender: Gender; count: number }[];
-      total: number;
-    }) => {
-      nationalityCounts[_id] = {
+    res.status(200).json({
+      status: 'success',
+      results: activityStats.length,
+      data: {
+        activityStats,
+      },
+    });
+  }
+);
+
+export const getDayStats = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {}
+);
+
+// const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+
+export const getNationalityStats = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const userPipeline = User.aggregate([
+      {
+        $group: {
+          _id: {
+            nationality: '$nationality',
+            gender: '$gender',
+          },
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $group: {
+          _id: '$_id.nationality',
+          genders: {
+            $push: {
+              gender: '$_id.gender',
+              count: '$count',
+            },
+          },
+          total: { $sum: '$count' },
+        },
+      },
+    ]);
+
+    const features = new APIFeatures(userPipeline, req.query, User);
+    const { results: userStats, totalPages, currentPage } = await features.paginate();
+
+    if (!userStats.length) return next(new AppError('No users found!', 404));
+
+    const nationalityStats: Record<
+      string,
+      { total: number; female: number; male: number; none: number }
+    > = {};
+
+    userStats.forEach(
+      ({
+        _id,
+        genders,
         total,
-        male: 0,
-        female: 0,
-        none: 0,
-      };
+      }: {
+        _id: string;
+        genders: { gender: Gender; count: number }[];
+        total: number;
+      }) => {
+        nationalityStats[_id] = {
+          total,
+          male: 0,
+          female: 0,
+          none: 0,
+        };
 
-      genders.forEach(({ gender, count }) => {
-        nationalityCounts[_id][gender] = count;
-      });
-    }
-  );
+        genders.forEach(({ gender, count }) => {
+          nationalityStats[_id][gender] = count;
+        });
+      }
+    );
 
-  res.status(200).json({
-    status: 'success',
-    data: {
-      totalUsers,
-      activeUsers,
-      passiveUsers,
-      nationalityCounts,
-    },
-  });
-});
+    res.status(200).json({
+      status: 'success',
+      currentPage,
+      totalPages,
+      results: Object.keys(nationalityStats).length,
+      data: {
+        nationalityStats,
+      },
+    });
+  }
+);
 
 export const getUserBirthdateStats = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    const birthdateStats = await User.aggregate([
+    const birthdatePipeline = User.aggregate([
       {
         $group: {
           _id: { $year: '$birthdate' },
@@ -97,15 +152,18 @@ export const getUserBirthdateStats = catchAsync(
       },
     ]);
 
-    const birthdates = birthdateStats.map(({ year, userCount }) => ({
-      userCount,
-      year,
-    }));
+    const features = new APIFeatures(birthdatePipeline, req.query, User);
+    const { results: birthdateStats, totalPages, currentPage } = await features.paginate();
+
+    if (!birthdateStats.length) return next(new AppError('No users found!', 404));
 
     res.status(200).json({
       status: 'success',
+      currentPage,
+      totalPages,
+      results: birthdateStats.length,
       data: {
-        birthdates,
+        birthdateStats,
       },
     });
   }
@@ -113,7 +171,7 @@ export const getUserBirthdateStats = catchAsync(
 
 export const getUserRegistrationStats = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    const registrations = await User.aggregate([
+    const registrationPipeline = User.aggregate([
       {
         $group: {
           _id: {
@@ -124,11 +182,16 @@ export const getUserRegistrationStats = catchAsync(
         },
       },
       {
-        $sort: { '_id.year': 1, '_id.month': 1 },
+        $sort: { '_id.year': 1, '_id.month': -1 },
       },
     ]);
 
-    const formattedRegistrations = registrations.map(reg => ({
+    const features = new APIFeatures(registrationPipeline, req.query, User);
+    const { results: registration, totalPages, currentPage } = await features.paginate();
+
+    if (!registration.length) return next(new AppError('No users found!', 404));
+
+    const registrationStats = registration.map(reg => ({
       year: reg._id.year,
       month: reg._id.month,
       userCount: reg.userCount,
@@ -136,52 +199,21 @@ export const getUserRegistrationStats = catchAsync(
 
     res.status(200).json({
       status: 'success',
+      currentPage,
+      totalPages,
+      results: registrationStats.length,
       data: {
-        registrations: formattedRegistrations,
-      },
-    });
-  }
-);
-
-export const getRoutineStats = catchAsync(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const stats = await Routine.aggregate([
-      {
-        $group: {
-          _id: null,
-          totalActivities: { $sum: '$allTimeActivities' },
-          totalExistingRoutines: {
-            $sum: {
-              $add: [
-                { $size: { $ifNull: ['$monday', []] } },
-                { $size: { $ifNull: ['$tuesday', []] } },
-                { $size: { $ifNull: ['$wednesday', []] } },
-                { $size: { $ifNull: ['$thursday', []] } },
-                { $size: { $ifNull: ['$friday', []] } },
-                { $size: { $ifNull: ['$saturday', []] } },
-                { $size: { $ifNull: ['$sunday', []] } },
-              ],
-            },
-          },
-        },
-      },
-    ]);
-
-    if (!stats.length) return next(new AppError('No routines found!', 404));
-
-    res.status(200).json({
-      status: 'success',
-      data: {
-        totalAllTimeActivities: stats[0].totalActivities,
-        totalExistingActivities: stats[0].totalExistingRoutines,
+        registrationStats,
       },
     });
   }
 );
 
 export default {
-  getUserStats,
+  getSummaryStats,
+  getActivityStats,
+  getDayStats,
+  getNationalityStats,
   getUserBirthdateStats,
   getUserRegistrationStats,
-  getRoutineStats,
 };

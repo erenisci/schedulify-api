@@ -13,9 +13,16 @@ router.use(authController.protect);
 // ADMINS
 router.use(authController.restrictTo('admin', 'super-admin'));
 
-router.get('/user-stats', statsController.getUserStats);
+// SUMMARY STATS
+router.get('/summary-stats', statsController.getSummaryStats);
+
+// ROUTINE STATS
+router.get('/activity-stats', statsController.getActivityStats);
+router.get('/day-stats', statsController.getDayStats);
+
+// USER STATS
+router.get('/nationality-stats', statsController.getNationalityStats);
 router.get('/birthdate-stats', statsController.getUserBirthdateStats);
 router.get('/registration-stats', statsController.getUserRegistrationStats);
-router.get('/routine-stats', statsController.getRoutineStats);
 
 export default router;

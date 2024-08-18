@@ -27,7 +27,6 @@ const activitySchema = new mongoose.Schema({
   category: {
     type: String,
     enum: Object.values(Category),
-    default: 'leisure',
     required: [true, 'Category field is required!'],
   },
 });
