@@ -8,7 +8,7 @@ import NationalityType from '../types/nationalityType';
 import RegistrationType from '../types/registrationType';
 import AppError from '../utils/appError';
 import catchAsync from '../utils/catchAsync';
-import paginate from '../utils/paginateHelper';
+import paginateHelper from '../utils/paginateHelper';
 
 export const getSummaryStats = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {}
@@ -178,7 +178,12 @@ export const getNationalityStats = catchAsync(
       results: userStats,
       totalPages,
       currentPage,
-    } = await paginate<NationalityType>(User, userPipeline, page, limit);
+    } = await paginateHelper<NationalityType>(
+      User,
+      userPipeline,
+      +req.query.page! ?? 1,
+      +req.query.limit! ?? 10
+    );
 
     if (!userStats.length) return next(new AppError('No users found!', 404));
 
@@ -240,7 +245,12 @@ export const getUserBirthdateStats = catchAsync(
       results: birthdateStats,
       totalPages,
       currentPage,
-    } = await paginate<BirthdateType>(User, birthdatePipeline, page, limit);
+    } = await paginateHelper<BirthdateType>(
+      User,
+      birthdatePipeline,
+      +req.query.page! ?? 1,
+      +req.query.limit! ?? 10
+    );
 
     if (!birthdateStats.length) return next(new AppError('No users found!', 404));
 
@@ -258,9 +268,6 @@ export const getUserBirthdateStats = catchAsync(
 
 export const getUserRegistrationStats = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    const limit = +req.query.limit! || 10;
-    const page = +req.query.page! || 1;
-
     const registrationPipeline = User.aggregate([
       {
         $group: {
@@ -280,7 +287,12 @@ export const getUserRegistrationStats = catchAsync(
       results: registration,
       totalPages,
       currentPage,
-    } = await paginate<RegistrationType>(User, registrationPipeline, page, limit);
+    } = await paginateHelper<RegistrationType>(
+      User,
+      registrationPipeline,
+      +req.query.page! ?? 1,
+      +req.query.limit! ?? 10
+    );
 
     if (!registration.length) return next(new AppError('No users found!', 404));
 
