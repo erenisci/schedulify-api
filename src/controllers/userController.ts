@@ -72,7 +72,7 @@ export const deleteMe = catchAsync(async (req: Request, res: Response, next: Nex
 export const getAllUsers = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
   const features = new APIFeatures<IUser>(User.find().select('-password'), req.query, User);
 
-  const { results: users, totalPages, currentPage } = await features.paginate();
+  const { results: users, totalPages, currentPage, totalResults } = await features.paginate();
 
   if (!users || !users.length) return next(new AppError('Users not found!', 404));
 
@@ -80,7 +80,8 @@ export const getAllUsers = catchAsync(async (req: Request, res: Response, next: 
     status: 'success',
     currentPage,
     totalPages,
-    results: users.length,
+    pageResults: users.length,
+    totalResults,
     data: users,
   });
 });

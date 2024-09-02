@@ -147,9 +147,6 @@ export const getActivityStats = catchAsync(
 
 export const getNationalityStats = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    const limit = +req.query.limit! || 10;
-    const page = +req.query.page! || 1;
-
     const userPipeline = User.aggregate([
       {
         $group: {
@@ -178,11 +175,12 @@ export const getNationalityStats = catchAsync(
       results: userStats,
       totalPages,
       currentPage,
+      totalResults,
     } = await paginateHelper<NationalityType>(
       User,
       userPipeline,
-      +req.query.page! ?? 1,
-      +req.query.limit! ?? 10
+      +req.query.page! || 1,
+      +req.query.limit! || 10
     );
 
     if (!userStats.length) return next(new AppError('No users found!', 404));
@@ -209,7 +207,8 @@ export const getNationalityStats = catchAsync(
       status: 'success',
       currentPage,
       totalPages,
-      results: Object.keys(nationalityStats).length,
+      pageResults: Object.keys(nationalityStats).length,
+      totalResults,
       data: {
         nationalityStats,
       },
@@ -219,9 +218,6 @@ export const getNationalityStats = catchAsync(
 
 export const getUserBirthdateStats = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    const limit = +req.query.limit! || 10;
-    const page = +req.query.page! || 1;
-
     const birthdatePipeline = User.aggregate([
       {
         $group: {
@@ -245,11 +241,12 @@ export const getUserBirthdateStats = catchAsync(
       results: birthdateStats,
       totalPages,
       currentPage,
+      totalResults,
     } = await paginateHelper<BirthdateType>(
       User,
       birthdatePipeline,
-      +req.query.page! ?? 1,
-      +req.query.limit! ?? 10
+      +req.query.page! || 1,
+      +req.query.limit! || 10
     );
 
     if (!birthdateStats.length) return next(new AppError('No users found!', 404));
@@ -258,7 +255,8 @@ export const getUserBirthdateStats = catchAsync(
       status: 'success',
       currentPage,
       totalPages,
-      results: birthdateStats.length,
+      pageResults: birthdateStats.length,
+      totalResults,
       data: {
         birthdateStats,
       },
@@ -287,11 +285,12 @@ export const getUserRegistrationStats = catchAsync(
       results: registration,
       totalPages,
       currentPage,
+      totalResults,
     } = await paginateHelper<RegistrationType>(
       User,
       registrationPipeline,
-      +req.query.page! ?? 1,
-      +req.query.limit! ?? 10
+      +req.query.page! || 1,
+      +req.query.limit! || 10
     );
 
     if (!registration.length) return next(new AppError('No users found!', 404));
@@ -306,7 +305,8 @@ export const getUserRegistrationStats = catchAsync(
       status: 'success',
       currentPage,
       totalPages,
-      results: registrationStats.length,
+      pageResults: registrationStats.length,
+      totalResults,
       data: {
         registrationStats,
       },

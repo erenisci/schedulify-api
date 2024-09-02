@@ -29,6 +29,7 @@ router
 // FOR ADMINS
 router.use(authController.restrictTo('admin', 'super-admin'));
 
+router.get('/', routineController.getAllRoutines);
 router.get('/:userId', routineController.getUserRoutines);
 router.get('/:userId/:day', routineController.getUserActivitiesByDay);
 

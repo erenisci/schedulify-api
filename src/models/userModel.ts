@@ -10,10 +10,12 @@ import IUser from '../types/userType';
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
+    lowercase: true,
     required: [true, 'Name is required!'],
   },
   surname: {
     type: String,
+    lowercase: true,
     required: [true, 'Surname is required!'],
   },
   email: {
@@ -25,6 +27,7 @@ const userSchema = new mongoose.Schema({
   },
   nationality: {
     type: String,
+    lowercase: true,
     required: [true, 'Nationality is required!'],
   },
   birthdate: {
@@ -34,6 +37,7 @@ const userSchema = new mongoose.Schema({
   gender: {
     type: String,
     enum: Object.values(Gender),
+    default: 'none',
   },
   password: {
     type: String,

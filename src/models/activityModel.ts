@@ -26,8 +26,20 @@ const activitySchema = new mongoose.Schema({
   },
   category: {
     type: String,
-    enum: Object.values(Category),
     required: [true, 'Category field is required!'],
+    lowercase: true,
+    enum: Object.values(Category),
+  },
+  color: {
+    type: String,
+    default: '#fff', // will change
+    lowercase: true,
+    validate: {
+      validator: function (v: string) {
+        return /^#[0-9A-F]{6}$|^#[0-9A-F]{3}$/i.test(v);
+      },
+      message: 'Invalid color hex code!',
+    },
   },
 });
 

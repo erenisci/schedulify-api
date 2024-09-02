@@ -7,6 +7,7 @@ type IActivity = {
   endTime: string;
   activity: string;
   category: string;
+  color: string;
   isTimeConflict: (newStartTime: string, newEndTime: string) => boolean;
 };
 

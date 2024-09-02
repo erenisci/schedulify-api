@@ -12,8 +12,8 @@ class APIFeatures<T> {
   constructor(query: Query<T[], T> | Aggregate<T[]>, queryString: any, model: Model<T>) {
     this.query = query;
     this.queryString = queryString;
-    this.page = +queryString.page ?? 1;
-    this.limit = +queryString.limit ?? 10;
+    this.page = +queryString.page || 1;
+    this.limit = +queryString.limit || 10;
     this.model = model;
 
     if (this.page <= 0 || this.limit <= 0)
@@ -35,7 +35,7 @@ class APIFeatures<T> {
 
     if (this.page > totalPages) throw new AppError('Page not found!', 404);
 
-    return { results, totalPages, currentPage: this.page };
+    return { results, totalPages, currentPage: this.page, totalResults: totalCount };
   }
 }
 

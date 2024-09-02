@@ -11,6 +11,7 @@ import IRoutine from '../types/routineType';
 import AppError from '../utils/appError';
 import catchAsync from '../utils/catchAsync';
 import { filterObj, filterObjError } from '../utils/filter';
+import APIFeatures from '../utils/apiFeatures';
 
 const isValidTimeFormat = (time: string) => {
   const timeFormat = /^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$/;
@@ -71,6 +72,7 @@ const createActivity = async (userId: string, day: Day, activity: any, next: Nex
     endTime: activity.endTime,
     activity: activity.activity,
     category: activity.category,
+    color: activity.color,
   });
 
   const dayRoutines = routine[day] || [];
@@ -98,7 +100,7 @@ const updateActivity = async (
   if (!routine) throw new AppError('No routine found for this user!', 404);
 
   const activityIndex = routine[day].findIndex(activity => activity._id.toString() === activityId);
-  routine[day].findIndex(activity => console.log(activity._id.toString()));
+  routine[day].findIndex(activity => String(activity._id) === activityId);
 
   if (activityIndex === -1) throw new AppError('Activity not found!', 404);
 
@@ -111,6 +113,7 @@ const updateActivity = async (
     endTime: updatedActivity.endTime || currentActivity.endTime,
     activity: updatedActivity.activity || currentActivity.activity,
     category: updatedActivity.category || currentActivity.category,
+    color: updatedActivity.color || currentActivity.color,
     isTimeConflict: currentActivity.isTimeConflict,
   };
 
@@ -207,11 +210,18 @@ export const updateMyActivity = catchAsync(
     const day: Day = req.params.day as Day;
     if (!isValidDay(day)) return next(new AppError(`Invalid day: ${day}`, 400));
 
-    const updatedActivity = filterObj(req.body, 'startTime', 'endTime', 'activity', 'category');
+    const updatedActivity = filterObj(
+      req.body,
+      'startTime',
+      'endTime',
+      'activity',
+      'category',
+      'color'
+    );
     if (Object.keys(updatedActivity).length === 0) {
       return filterObjError(
         next,
-        'At least one of startTime, endTime, activity, or category must be provided.'
+        'At least one of startTime, endTime, activity, category or color must be provided.'
       );
     }
 
@@ -262,6 +272,25 @@ export const deleteMyActivity = catchAsync(
 );
 
 // FOR ADMINS
+export const getAllRoutines = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const features = new APIFeatures<IRoutine>(Routine.find(), req.query, Routine);
+
+    const { results: routines, totalPages, currentPage, totalResults } = await features.paginate();
+
+    if (!routines || !routines.length) return next(new AppError('Routines not found!', 404));
+
+    res.status(200).json({
+      status: 'success',
+      currentPage,
+      totalPages,
+      pageResults: routines.length,
+      totalResults,
+      data: routines,
+    });
+  }
+);
+
 export const getUserRoutines = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const { userId } = req.params;
@@ -399,6 +428,7 @@ export default {
   createMyActivity,
   updateMyActivity,
   deleteMyActivity,
+  getAllRoutines,
   getUserRoutines,
   getUserActivitiesByDay,
   getUserActivityByDayAndID,

@@ -5,6 +5,7 @@ import Role from '../enums/roleEnum';
 type IUser = Document & {
   _id: string;
   name: string;
+  surname: string;
   email: string;
   nationality: string;
   birthdate: Date;

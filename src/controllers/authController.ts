@@ -57,6 +57,7 @@ const createSendToken = (user: IUser, message: string, statusCode: number, res: 
 };
 
 export const signup = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  req.body.role = 'user';
   const newUser = await User.create(req.body);
 
   const message = 'You have successfully signed up!';

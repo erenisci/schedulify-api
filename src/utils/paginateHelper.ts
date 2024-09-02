@@ -2,11 +2,12 @@ import { Aggregate, Model } from 'mongoose';
 
 import AppError from './appError';
 
-interface PaginationResult<T> {
+type PaginationResult<T> = {
   results: T[];
   totalPages: number;
   currentPage: number;
-}
+  totalResults: number;
+};
 
 const paginate = async <T>(
   model: Model<any>,
@@ -15,7 +16,6 @@ const paginate = async <T>(
   limit: number
 ): Promise<PaginationResult<T>> => {
   if (page <= 0 || limit <= 0) throw new AppError('Page and limit must be greater than 0.', 400);
-  console.log(page, limit);
 
   const skip = (page - 1) * limit;
 
@@ -39,6 +39,7 @@ const paginate = async <T>(
     results,
     totalPages,
     currentPage: page,
+    totalResults: totalCount,
   };
 };
 
