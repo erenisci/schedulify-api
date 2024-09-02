@@ -93,18 +93,18 @@ userSchema.pre<IUser>('save', async function (next) {
   next();
 });
 
+userSchema.pre<IUser>('save', function (next: Function) {
+  if (!this.isModified('password') || this.isNew) return next();
+
+  this.passwordChangedAt = new Date(Date.now() - 1000);
+  next();
+});
+
 userSchema.pre<mongoose.Query<IUser, IUser>>('findOneAndUpdate', async function (next: Function) {
   const update = this.getUpdate() as Partial<IUser>;
 
   if (update.password) update.password = await bcrypt.hash(update.password, 12);
 
-  next();
-});
-
-userSchema.pre<IUser>('save', function (next: Function) {
-  if (!this.isModified('password') || this.isNew) return next();
-
-  this.passwordChangedAt = new Date(Date.now() - 1000);
   next();
 });
 

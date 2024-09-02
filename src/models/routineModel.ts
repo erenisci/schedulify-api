@@ -1,6 +1,6 @@
 import mongoose, { Model } from 'mongoose';
 
-import Day from '../enums/dayeEnum';
+import Day from '../enums/dayEnum';
 import IRoutine from '../types/routineType';
 import { activitySchema } from './activityModel';
 

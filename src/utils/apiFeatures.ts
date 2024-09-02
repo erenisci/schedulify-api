@@ -3,18 +3,18 @@ import { Aggregate, Model, Query } from 'mongoose';
 import AppError from './appError';
 
 class APIFeatures<T> {
+  model: Model<T>;
   query: Query<T[], T> | Aggregate<T[]>;
   queryString: any;
   page: number;
   limit: number;
-  model: Model<T>;
 
   constructor(query: Query<T[], T> | Aggregate<T[]>, queryString: any, model: Model<T>) {
+    this.model = model;
     this.query = query;
     this.queryString = queryString;
     this.page = +queryString.page || 1;
     this.limit = +queryString.limit || 10;
-    this.model = model;
 
     if (this.page <= 0 || this.limit <= 0)
       throw new AppError('Page and limit must be greater than 0.', 400);

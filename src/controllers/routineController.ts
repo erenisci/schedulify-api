@@ -3,15 +3,15 @@ import mongoose from 'mongoose';
 import validator from 'validator';
 
 import Category from '../enums/categoryEnum';
-import Day from '../enums/dayeEnum';
+import Day from '../enums/dayEnum';
 import Activity from '../models/activityModel';
 import Routine from '../models/routineModel';
 import IActivity from '../types/activityType';
 import IRoutine from '../types/routineType';
+import APIFeatures from '../utils/apiFeatures';
 import AppError from '../utils/appError';
 import catchAsync from '../utils/catchAsync';
 import { filterObj, filterObjError } from '../utils/filter';
-import APIFeatures from '../utils/apiFeatures';
 
 const isValidTimeFormat = (time: string) => {
   const timeFormat = /^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$/;
@@ -27,6 +27,23 @@ const isValidCategory = (category: string): boolean => {
   return Object.values(Category).includes(category as Category);
 };
 
+const validateActivityFields = (activity: Partial<IActivity>) => {
+  if (
+    !activity ||
+    !activity.startTime ||
+    !activity.endTime ||
+    !activity.activity ||
+    !activity.category
+  )
+    throw new AppError(
+      'All fields (startTime, endTime, activity, category) are required, except color!',
+      400
+    );
+
+  if (activity.category && !isValidCategory(activity.category))
+    throw new AppError('Invalid category provided!', 400);
+};
+
 const getRoutineForUserOnDay = async (userId: string, day: string) => {
   if (!isValidDay(day)) throw new AppError('Invalid day provided!', 400);
 
@@ -40,21 +57,7 @@ const getRoutineForUserOnDay = async (userId: string, day: string) => {
   return activities;
 };
 
-const validateActivityFields = (activity: Partial<IActivity>) => {
-  if (
-    !activity ||
-    !activity.startTime ||
-    !activity.endTime ||
-    !activity.activity ||
-    !activity.category
-  )
-    throw new AppError('All fields (startTime, endTime, activity, category) are required!', 400);
-
-  if (activity.category && !isValidCategory(activity.category))
-    throw new AppError('Invalid category provided!', 400);
-};
-
-const createActivity = async (userId: string, day: Day, activity: any, next: NextFunction) => {
+const createActivity = async (userId: string, day: Day, activity: any) => {
   let routine = await Routine.findOne({ user: userId });
 
   if (!routine) {
@@ -141,8 +144,7 @@ const updateActivity = async (
 // FOR USERS
 export const getMyRoutines = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
   const routine = await Routine.findOne({ user: req.user.id });
-  if (!routine || !routine.allTimeActivities)
-    return next(new AppError('No activity found for this user!', 404));
+  if (!routine || !routine.allTimeActivities) return next(new AppError('Routines not found!', 404));
 
   res.status(200).json({
     status: 'success',
@@ -196,7 +198,7 @@ export const createMyActivity = catchAsync(
     isValidTimeFormat(activity.startTime);
     isValidTimeFormat(activity.endTime);
 
-    const newActivity = await createActivity(req.user.id, day, activity, next);
+    const newActivity = await createActivity(req.user.id, day, activity);
 
     res.status(201).json({
       status: 'success',
@@ -218,12 +220,11 @@ export const updateMyActivity = catchAsync(
       'category',
       'color'
     );
-    if (Object.keys(updatedActivity).length === 0) {
+    if (Object.keys(updatedActivity).length === 0)
       return filterObjError(
         next,
         'At least one of startTime, endTime, activity, category or color must be provided.'
       );
-    }
 
     if (updatedActivity.category && !isValidCategory(updatedActivity.category))
       throw new AppError('Invalid category provided!', 400);
@@ -308,10 +309,8 @@ export const getUserRoutines = catchAsync(
 
 export const getUserActivitiesByDay = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    const day: Day = req.params.day as Day;
-    if (!isValidDay(day)) throw new AppError('Invalid day provided!', 400);
-
     const { userId } = req.params;
+    const day: Day = req.params.day as Day;
     const activities = await getRoutineForUserOnDay(userId, day);
 
     res.status(200).json({
@@ -324,10 +323,8 @@ export const getUserActivitiesByDay = catchAsync(
 // FOR SUPER-ADMINS
 export const getUserActivityByDayAndID = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    const day: Day = req.params.day as Day;
-    if (!isValidDay(day)) throw new AppError('Invalid day provided!', 400);
-
     const { userId } = req.params;
+    const day: Day = req.params.day as Day;
     const activities = await getRoutineForUserOnDay(userId, day);
 
     const { routineId } = req.params;
@@ -352,7 +349,7 @@ export const createUserActivityByDayAndID = catchAsync(
     isValidTimeFormat(activity.endTime);
 
     const userId = req.params.userId;
-    const newActivity = await createActivity(userId, day, activity, next);
+    const newActivity = await createActivity(userId, day, activity);
 
     res.status(201).json({
       status: 'success',
@@ -366,11 +363,18 @@ export const updateUserActivityByDayAndID = catchAsync(
     const day: Day = req.params.day as Day;
     if (!isValidDay(day)) return next(new AppError(`Invalid day: ${day}`, 400));
 
-    const updatedActivity = filterObj(req.body, 'startTime', 'endTime', 'activity', 'category');
+    const updatedActivity = filterObj(
+      req.body,
+      'startTime',
+      'endTime',
+      'activity',
+      'category',
+      'color'
+    );
     if (Object.keys(updatedActivity).length === 0) {
       return filterObjError(
         next,
-        'At least one of startTime, endTime, activity, or category must be provided.'
+        'At least one of startTime, endTime, activity, category or color must be provided.'
       );
     }
 

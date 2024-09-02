@@ -123,7 +123,10 @@ export const updateUser = catchAsync(async (req: Request, res: Response, next: N
   );
 
   if (!filteredBody || Object.keys(filteredBody).length === 0)
-    return filterObjError(next, 'name, surname, email, nationality, birthdate, password or role.');
+    return filterObjError(
+      next,
+      'name, surname, email, nationality, birthdate, gender, password or role.'
+    );
 
   const updatedUser = await User.findByIdAndUpdate(req.params.id, filteredBody, {
     new: true,

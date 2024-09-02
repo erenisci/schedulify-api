@@ -1,13 +1,11 @@
 import Gender from '../enums/genderEnum';
 
-type GenderCount = {
-  gender: Gender;
-  count: number;
-};
-
 type NationalityType = {
   _id: string;
-  genders: GenderCount[];
+  genders: {
+    gender: Gender;
+    count: number;
+  }[];
   total: number;
 };
 

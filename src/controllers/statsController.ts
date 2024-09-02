@@ -11,7 +11,9 @@ import catchAsync from '../utils/catchAsync';
 import paginateHelper from '../utils/paginateHelper';
 
 export const getSummaryStats = catchAsync(
-  async (req: Request, res: Response, next: NextFunction) => {}
+  async (req: Request, res: Response, next: NextFunction) => {
+    // At the end
+  }
 );
 
 export const getDayStats = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
