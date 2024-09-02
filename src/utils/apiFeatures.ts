@@ -29,7 +29,7 @@ class APIFeatures<T> {
     }
 
     const results = await this.query.exec();
-    const totalCount = results.length;
+    const totalCount = await this.model.countDocuments();
     const totalPages = Math.ceil(totalCount / this.limit);
 
     if (this.page > totalPages) throw new AppError('Page not found!', 404);

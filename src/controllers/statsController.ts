@@ -1,16 +1,104 @@
 import { NextFunction, Request, Response } from 'express';
 
-import Gender from '../enums/genderEnum';
 import Activity from '../models/activityModel';
 import Routine from '../models/routineModel';
 import User from '../models/userModel';
-import APIFeatures from '../utils/apiFeatures';
+import BirthdateType from '../types/birthdateType';
+import NationalityType from '../types/nationalityType';
+import RegistrationType from '../types/registrationType';
 import AppError from '../utils/appError';
 import catchAsync from '../utils/catchAsync';
+import paginate from '../utils/paginateHelper';
 
 export const getSummaryStats = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {}
 );
+
+export const getDayStats = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  const dayStats = await Routine.aggregate([
+    {
+      $project: {
+        days: {
+          monday: '$monday',
+          tuesday: '$tuesday',
+          wednesday: '$wednesday',
+          thursday: '$thursday',
+          friday: '$friday',
+          saturday: '$saturday',
+          sunday: '$sunday',
+        },
+      },
+    },
+    {
+      $project: {
+        dayActivities: {
+          $objectToArray: '$days',
+        },
+      },
+    },
+    {
+      $unwind: '$dayActivities',
+    },
+    {
+      $unwind: '$dayActivities.v',
+    },
+    {
+      $group: {
+        _id: {
+          day: '$dayActivities.k',
+          category: '$dayActivities.v.category',
+        },
+        totalActivities: { $sum: 1 },
+        totalDuration: { $sum: '$dayActivities.v.duration' },
+      },
+    },
+    {
+      $group: {
+        _id: '$_id.day',
+        totalActivities: { $sum: '$totalActivities' },
+        categories: {
+          $push: {
+            categoryName: '$_id.category',
+            duration: '$totalDuration',
+          },
+        },
+      },
+    },
+    {
+      $addFields: {
+        sortOrder: {
+          $indexOfArray: [
+            ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'],
+            '$_id',
+          ],
+        },
+      },
+    },
+    {
+      $addFields: {
+        categories: {
+          $sortArray: { input: '$categories', sortBy: { duration: -1 } },
+        },
+      },
+    },
+    {
+      $sort: { sortOrder: 1 },
+    },
+  ]);
+
+  if (!dayStats || !dayStats.length) return next(new AppError('No activities found!', 404));
+
+  res.status(200).json({
+    status: 'success',
+    data: dayStats.reduce((acc, stat) => {
+      acc[stat._id] = {
+        totalActivities: stat.totalActivities,
+        categories: stat.categories,
+      };
+      return acc;
+    }, {} as Record<string, { totalActivities: number; categories: { categoryName: string; duration: number }[] }>),
+  });
+});
 
 export const getActivityStats = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -32,7 +120,9 @@ export const getActivityStats = catchAsync(
             $cond: {
               if: { $eq: ['$totalActivity', 0] },
               then: 0,
-              else: { $divide: ['$totalDuration', '$totalActivity'] },
+              else: {
+                $round: [{ $divide: ['$totalDuration', '$totalActivity'] }, 2],
+              },
             },
           },
         },
@@ -42,7 +132,8 @@ export const getActivityStats = catchAsync(
       },
     ]);
 
-    if (!activityStats.length) return next(new AppError('No activities found!', 404));
+    if (!activityStats || !activityStats.length)
+      return next(new AppError('No activities found!', 404));
 
     res.status(200).json({
       status: 'success',
@@ -54,14 +145,11 @@ export const getActivityStats = catchAsync(
   }
 );
 
-export const getDayStats = catchAsync(
-  async (req: Request, res: Response, next: NextFunction) => {}
-);
-
-// const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-
 export const getNationalityStats = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
+    const limit = +req.query.limit! || 10;
+    const page = +req.query.page! || 1;
+
     const userPipeline = User.aggregate([
       {
         $group: {
@@ -86,8 +174,11 @@ export const getNationalityStats = catchAsync(
       },
     ]);
 
-    const features = new APIFeatures(userPipeline, req.query, User);
-    const { results: userStats, totalPages, currentPage } = await features.paginate();
+    const {
+      results: userStats,
+      totalPages,
+      currentPage,
+    } = await paginate<NationalityType>(User, userPipeline, page, limit);
 
     if (!userStats.length) return next(new AppError('No users found!', 404));
 
@@ -96,28 +187,18 @@ export const getNationalityStats = catchAsync(
       { total: number; female: number; male: number; none: number }
     > = {};
 
-    userStats.forEach(
-      ({
-        _id,
-        genders,
+    userStats.forEach(({ _id, genders, total }: NationalityType) => {
+      nationalityStats[_id] = {
         total,
-      }: {
-        _id: string;
-        genders: { gender: Gender; count: number }[];
-        total: number;
-      }) => {
-        nationalityStats[_id] = {
-          total,
-          male: 0,
-          female: 0,
-          none: 0,
-        };
+        male: 0,
+        female: 0,
+        none: 0,
+      };
 
-        genders.forEach(({ gender, count }) => {
-          nationalityStats[_id][gender] = count;
-        });
-      }
-    );
+      genders.forEach(({ gender, count }) => {
+        nationalityStats[_id][gender] = count;
+      });
+    });
 
     res.status(200).json({
       status: 'success',
@@ -133,6 +214,9 @@ export const getNationalityStats = catchAsync(
 
 export const getUserBirthdateStats = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
+    const limit = +req.query.limit! || 10;
+    const page = +req.query.page! || 1;
+
     const birthdatePipeline = User.aggregate([
       {
         $group: {
@@ -152,8 +236,11 @@ export const getUserBirthdateStats = catchAsync(
       },
     ]);
 
-    const features = new APIFeatures(birthdatePipeline, req.query, User);
-    const { results: birthdateStats, totalPages, currentPage } = await features.paginate();
+    const {
+      results: birthdateStats,
+      totalPages,
+      currentPage,
+    } = await paginate<BirthdateType>(User, birthdatePipeline, page, limit);
 
     if (!birthdateStats.length) return next(new AppError('No users found!', 404));
 
@@ -171,6 +258,9 @@ export const getUserBirthdateStats = catchAsync(
 
 export const getUserRegistrationStats = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
+    const limit = +req.query.limit! || 10;
+    const page = +req.query.page! || 1;
+
     const registrationPipeline = User.aggregate([
       {
         $group: {
@@ -186,12 +276,15 @@ export const getUserRegistrationStats = catchAsync(
       },
     ]);
 
-    const features = new APIFeatures(registrationPipeline, req.query, User);
-    const { results: registration, totalPages, currentPage } = await features.paginate();
+    const {
+      results: registration,
+      totalPages,
+      currentPage,
+    } = await paginate<RegistrationType>(User, registrationPipeline, page, limit);
 
     if (!registration.length) return next(new AppError('No users found!', 404));
 
-    const registrationStats = registration.map(reg => ({
+    const registrationStats = registration.map((reg: RegistrationType) => ({
       year: reg._id.year,
       month: reg._id.month,
       userCount: reg.userCount,
