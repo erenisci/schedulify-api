@@ -1,7 +1,7 @@
 import mongoose, { Model } from 'mongoose';
 
 import Day from '../enums/dayEnum';
-import IRoutine from '../types/routineType';
+import IRoutine from '../types/modelTypes/routineType';
 import { activitySchema } from './activityModel';
 
 const routineSchema = new mongoose.Schema({

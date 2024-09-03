@@ -2,9 +2,10 @@ import crypto from 'crypto';
 import { NextFunction, Request, Response } from 'express';
 import jwt, { JwtPayload } from 'jsonwebtoken';
 
+import countries from '../data/countries';
 import User from '../models/userModel';
 import Cookie from '../types/cookieType';
-import IUser from '../types/userType';
+import IUser from '../types/modelTypes/userType';
 import AppError from '../utils/appError';
 import catchAsync from '../utils/catchAsync';
 import sendEmail from '../utils/email';
@@ -57,6 +58,10 @@ const createSendToken = (user: IUser, message: string, statusCode: number, res: 
 };
 
 export const signup = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  if (req.body.nationality && !countries[req.body.nationality])
+    return next(new AppError('Invalid nationality code! (Alpha-3)', 400));
+  else req.body.nationality = countries[req.body.nationality];
+
   req.body.role = 'user';
   const newUser = await User.create(req.body);
 

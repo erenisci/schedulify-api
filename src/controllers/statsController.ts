@@ -3,9 +3,9 @@ import { NextFunction, Request, Response } from 'express';
 import Activity from '../models/activityModel';
 import Routine from '../models/routineModel';
 import User from '../models/userModel';
-import BirthdateType from '../types/birthdateType';
-import NationalityType from '../types/nationalityType';
-import RegistrationType from '../types/registrationType';
+import BirthdateStatsType from '../types/statTypes/birthdateStatsType';
+import NationalityType from '../types/statTypes/nationalityStatsType';
+import RegistrationStatsType from '../types/statTypes/registrationStatsType';
 import AppError from '../utils/appError';
 import catchAsync from '../utils/catchAsync';
 import paginateHelper from '../utils/paginateHelper';
@@ -153,7 +153,7 @@ export const getNationalityStats = catchAsync(
       {
         $group: {
           _id: {
-            nationality: '$nationality',
+            nationality: '$nationality.countryName',
             gender: '$gender',
           },
           count: { $sum: 1 },
@@ -244,7 +244,7 @@ export const getUserBirthdateStats = catchAsync(
       totalPages,
       currentPage,
       totalResults,
-    } = await paginateHelper<BirthdateType>(
+    } = await paginateHelper<BirthdateStatsType>(
       User,
       birthdatePipeline,
       +req.query.page! || 1,
@@ -288,7 +288,7 @@ export const getUserRegistrationStats = catchAsync(
       totalPages,
       currentPage,
       totalResults,
-    } = await paginateHelper<RegistrationType>(
+    } = await paginateHelper<RegistrationStatsType>(
       User,
       registrationPipeline,
       +req.query.page! || 1,
@@ -297,7 +297,7 @@ export const getUserRegistrationStats = catchAsync(
 
     if (!registration.length) return next(new AppError('No users found!', 404));
 
-    const registrationStats = registration.map((reg: RegistrationType) => ({
+    const registrationStats = registration.map((reg: RegistrationStatsType) => ({
       year: reg._id.year,
       month: reg._id.month,
       userCount: reg.userCount,

@@ -1,7 +1,7 @@
 import mongoose, { Model } from 'mongoose';
 
 import Category from '../enums/categoryEnum';
-import IActivity from '../types/activityType';
+import IActivity from '../types/modelTypes/activityType';
 
 const activitySchema = new mongoose.Schema({
   routine: {

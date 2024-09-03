@@ -1,6 +1,6 @@
 import { Document } from 'mongoose';
 
-import Role from '../enums/roleEnum';
+import Role from '../../enums/roleEnum';
 
 type IUser = Document & {
   _id: string;

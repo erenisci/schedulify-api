@@ -3,9 +3,10 @@ import crypto from 'crypto';
 import mongoose, { Model } from 'mongoose';
 import validator from 'validator';
 
+import countries from '../data/countries';
 import Gender from '../enums/genderEnum';
 import Role from '../enums/roleEnum';
-import IUser from '../types/userType';
+import IUser from '../types/modelTypes/userType';
 
 const userSchema = new mongoose.Schema({
   name: {
@@ -26,7 +27,8 @@ const userSchema = new mongoose.Schema({
     validate: [validator.isEmail, 'Please provide a valid email!'],
   },
   nationality: {
-    type: String,
+    type: Map,
+    of: String,
     lowercase: true,
     required: [true, 'Nationality is required!'],
   },

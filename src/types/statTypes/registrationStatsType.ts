@@ -1,4 +1,4 @@
-type RegistrationType = {
+type RegistrationStatsType = {
   _id: {
     year: number;
     month: number;
@@ -6,4 +6,4 @@ type RegistrationType = {
   userCount: number;
 };
 
-export default RegistrationType;
+export default RegistrationStatsType;

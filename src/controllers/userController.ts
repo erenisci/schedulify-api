@@ -1,7 +1,8 @@
 import { NextFunction, Request, Response } from 'express';
 
+import countries from '../data/countries';
 import User from '../models/userModel';
-import IUser from '../types/userType';
+import IUser from '../types/modelTypes/userType';
 import APIFeatures from '../utils/apiFeatures';
 import AppError from '../utils/appError';
 import catchAsync from '../utils/catchAsync';
@@ -24,6 +25,10 @@ export const updateMe = catchAsync(async (req: Request, res: Response, next: Nex
     return next(
       new AppError('This route is not for password updates. Please use /updateMyPassword', 400)
     );
+
+  if (req.body.nationality && !countries[req.body.nationality])
+    return next(new AppError('Invalid nationality code! (Alpha-3)', 400));
+  else req.body.nationality = countries[req.body.nationality];
 
   const filteredBody = filterObj(
     req.body,
@@ -99,8 +104,11 @@ export const getUser = catchAsync(async (req: Request, res: Response, next: Next
 
 // FOR SUPER-ADMINS!!
 export const createUser = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-  const newUser = await User.create(req.body);
+  if (req.body.nationality && !countries[req.body.nationality])
+    return next(new AppError('Invalid nationality code! (Alpha-3)', 400));
+  else req.body.nationality = countries[req.body.nationality];
 
+  const newUser = await User.create(req.body);
   newUser.password = undefined;
 
   res.status(201).json({
@@ -110,6 +118,10 @@ export const createUser = catchAsync(async (req: Request, res: Response, next: N
 });
 
 export const updateUser = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  if (req.body.nationality && !countries[req.body.nationality])
+    return next(new AppError('Invalid nationality code! (Alpha-3)', 400));
+  else req.body.nationality = countries[req.body.nationality];
+
   const filteredBody = filterObj(
     req.body,
     'name',

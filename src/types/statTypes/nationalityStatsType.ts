@@ -1,4 +1,4 @@
-import Gender from '../enums/genderEnum';
+import Gender from '../../enums/genderEnum';
 
 type NationalityType = {
   _id: string;
