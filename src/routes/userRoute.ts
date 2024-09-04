@@ -2,6 +2,7 @@ import express from 'express';
 
 import authController from '../controllers/authController';
 import userController from '../controllers/userController';
+import validateNationality from '../middlewares/validateNationalityMiddleware';
 
 const router = express.Router();
 
@@ -21,7 +22,7 @@ router.use(authController.restrictTo('user', 'admin', 'super-admin'));
 
 router.post('/logout', authController.logout);
 router.get('/get-me', userController.getMe);
-router.patch('/update-me', userController.updateMe);
+router.patch('/update-me', validateNationality, userController.updateMe);
 router.delete('/delete-me', userController.deleteMe);
 router.patch('/update-my-password', authController.updateMyPassword);
 
@@ -34,7 +35,10 @@ router.get('/:id', userController.getUser);
 // FOR SUPER-ADMINS (Exclude Passwords)
 router.use(authController.restrictTo('super-admin'));
 
-router.post('/', userController.createUser);
-router.route('/:id').patch(userController.updateUser).delete(userController.deleteUser);
+router.post('/', validateNationality, userController.createUser);
+router
+  .route('/:id')
+  .patch(validateNationality, userController.updateUser)
+  .delete(userController.deleteUser);
 
 export default router;

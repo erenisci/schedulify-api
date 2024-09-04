@@ -3,7 +3,6 @@ import crypto from 'crypto';
 import mongoose, { Model } from 'mongoose';
 import validator from 'validator';
 
-import countries from '../data/countries';
 import Gender from '../enums/genderEnum';
 import Role from '../enums/roleEnum';
 import IUser from '../types/modelTypes/userType';

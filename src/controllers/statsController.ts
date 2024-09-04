@@ -6,9 +6,9 @@ import User from '../models/userModel';
 import BirthdateStatsType from '../types/statTypes/birthdateStatsType';
 import NationalityType from '../types/statTypes/nationalityStatsType';
 import RegistrationStatsType from '../types/statTypes/registrationStatsType';
+import paginateHelper from '../utils/aggregatePagination';
 import AppError from '../utils/appError';
 import catchAsync from '../utils/catchAsync';
-import paginateHelper from '../utils/paginateHelper';
 
 export const getSummaryStats = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
