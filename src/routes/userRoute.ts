@@ -3,6 +3,7 @@ import express from 'express';
 import authController from '../controllers/authController';
 import userController from '../controllers/userController';
 import validateNationality from '../middlewares/validateNationalityMiddleware';
+import validateUserId from '../middlewares/validateUserId';
 
 const router = express.Router();
 
@@ -30,7 +31,7 @@ router.patch('/update-my-password', authController.updateMyPassword);
 router.use(authController.restrictTo('admin', 'super-admin'));
 
 router.get('/', userController.getAllUsers);
-router.get('/:id', userController.getUser);
+router.get('/:id', validateUserId, userController.getUser);
 
 // FOR SUPER-ADMINS (Exclude Passwords)
 router.use(authController.restrictTo('super-admin'));
@@ -38,6 +39,7 @@ router.use(authController.restrictTo('super-admin'));
 router.post('/', validateNationality, userController.createUser);
 router
   .route('/:id')
+  .all(validateUserId)
   .patch(validateNationality, userController.updateUser)
   .delete(userController.deleteUser);
 

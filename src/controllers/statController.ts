@@ -6,7 +6,7 @@ import User from '../models/userModel';
 import BirthdateStatsType from '../types/statTypes/birthdateStatsType';
 import NationalityType from '../types/statTypes/nationalityStatsType';
 import RegistrationStatsType from '../types/statTypes/registrationStatsType';
-import paginateHelper from '../utils/aggregatePagination';
+import aggregatePagination from '../utils/aggregatePagination';
 import AppError from '../utils/appError';
 import catchAsync from '../utils/catchAsync';
 
@@ -178,7 +178,7 @@ export const getNationalityStats = catchAsync(
       totalPages,
       currentPage,
       totalResults,
-    } = await paginateHelper<NationalityType>(
+    } = await aggregatePagination<NationalityType>(
       User,
       userPipeline,
       +req.query.page! || 1,
@@ -244,7 +244,7 @@ export const getUserBirthdateStats = catchAsync(
       totalPages,
       currentPage,
       totalResults,
-    } = await paginateHelper<BirthdateStatsType>(
+    } = await aggregatePagination<BirthdateStatsType>(
       User,
       birthdatePipeline,
       +req.query.page! || 1,
@@ -288,7 +288,7 @@ export const getUserRegistrationStats = catchAsync(
       totalPages,
       currentPage,
       totalResults,
-    } = await paginateHelper<RegistrationStatsType>(
+    } = await aggregatePagination<RegistrationStatsType>(
       User,
       registrationPipeline,
       +req.query.page! || 1,

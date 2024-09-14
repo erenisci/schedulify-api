@@ -4,7 +4,7 @@ import morgan from 'morgan';
 import errorController from './controllers/errorController';
 import reminderRoute from './routes/reminderRoute';
 import routineRoute from './routes/routineRoute';
-import statsRoute from './routes/statsRoute';
+import statsRoute from './routes/statRoute';
 import userRoute from './routes/userRoute';
 import AppError from './utils/appError';
 

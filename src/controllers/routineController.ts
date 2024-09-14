@@ -5,7 +5,7 @@ import {
   createActivity,
   getRoutineForUserOnDay,
   updateActivity,
-} from '../helpers/activityControllerHelper';
+} from '../helpers/routineControllerHelper';
 import Activity from '../models/activityModel';
 import Routine from '../models/routineModel';
 import {
@@ -13,7 +13,7 @@ import {
   isValidTimeFormat,
   validateActivityFields,
   validateActivityTimes,
-} from '../services/activityService';
+} from '../services/routineService';
 import IActivity from '../types/modelTypes/activityType';
 import IRoutine from '../types/modelTypes/routineType';
 import APIFeatures from '../utils/apiFeatures';
@@ -49,21 +49,6 @@ export const getMyActivities = catchAsync(
   }
 );
 
-export const getMyActivity = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-  const day: Day = req.params.day as Day;
-  const routine = await Routine.findOne({ user: req.user.id });
-  if (!routine || !routine[day]) return next(new AppError(`No activity found for ${day}!`, 404));
-
-  const activityId = req.params.routineId;
-  const activity = routine[day].find(act => act._id.toString() === activityId);
-  if (!activity) return next(new AppError('Activity not found!', 404));
-
-  res.status(200).json({
-    status: 'success',
-    data: activity,
-  });
-});
-
 export const createMyActivity = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const activity = req.body;
@@ -79,6 +64,21 @@ export const createMyActivity = catchAsync(
     });
   }
 );
+
+export const getMyActivity = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  const day: Day = req.params.day as Day;
+  const routine = await Routine.findOne({ user: req.user.id });
+  if (!routine || !routine[day]) return next(new AppError(`No activity found for ${day}!`, 404));
+
+  const activityId = req.params.routineId;
+  const activity = routine[day].find(act => act._id.toString() === activityId);
+  if (!activity) return next(new AppError('Activity not found!', 404));
+
+  res.status(200).json({
+    status: 'success',
+    data: activity,
+  });
+});
 
 export const updateMyActivity = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -123,7 +123,7 @@ export const deleteMyActivity = catchAsync(
     const activityIndex = routine[day].findIndex(
       activity => activity._id.toString() === activityId
     );
-    if (activityIndex === -1) return next(new AppError('Activity not found!', 404));
+    if (activityIndex === -1) return next(new AppError(`No activity found for ${day}!`, 404));
 
     const activityToDelete = routine[day][activityIndex];
     if (!activityToDelete) return next(new AppError('Activity not found!', 404));

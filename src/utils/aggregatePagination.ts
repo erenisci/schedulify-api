@@ -9,7 +9,7 @@ type PaginationResult<T> = {
   totalResults: number;
 };
 
-const paginate = async <T>(
+const aggregatePagination = async <T>(
   model: Model<any>,
   pipeline: Aggregate<any> | any[],
   page: number,
@@ -43,4 +43,4 @@ const paginate = async <T>(
   };
 };
 
-export default paginate;
+export default aggregatePagination;

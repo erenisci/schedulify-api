@@ -65,7 +65,7 @@ export const updateActivity = async (
 
   const activityIndex = routine[day].findIndex(activity => activity._id.toString() === activityId);
   routine[day].findIndex(activity => String(activity._id) === activityId);
-  if (activityIndex === -1) throw new AppError('Activity not found!', 404);
+  if (activityIndex === -1) throw new AppError(`No activity found for ${day}!`, 404);
 
   const currentActivity = routine[day][activityIndex];
 
