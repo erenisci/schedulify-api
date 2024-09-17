@@ -2,7 +2,6 @@ import express from 'express';
 import morgan from 'morgan';
 
 import errorController from './controllers/errorController';
-import reminderRoute from './routes/reminderRoute';
 import routineRoute from './routes/routineRoute';
 import statsRoute from './routes/statRoute';
 import userRoute from './routes/userRoute';
@@ -16,7 +15,6 @@ app.use(express.json({ limit: '10kb' }));
 
 app.use('/api/v1/users', userRoute);
 app.use('/api/v1/routines', routineRoute);
-app.use('/api/v1/reminders', reminderRoute);
 app.use('/api/v1/stats', statsRoute);
 
 app.all('*', (req, res, next) => {
