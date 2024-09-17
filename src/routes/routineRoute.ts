@@ -26,8 +26,7 @@ router
 
 router
   .route('/my-routines/:day/:routineId')
-  .all(validateDay)
-  .all(validateRoutineId)
+  .all(validateDay, validateRoutineId)
   .get(routineController.getMyActivity)
   .patch(routineController.updateMyActivity)
   .delete(routineController.deleteMyActivity);
@@ -51,9 +50,7 @@ router.post(
 
 router
   .route('/:userId/:day/:routineId')
-  .all(validateUserId)
-  .all(validateDay)
-  .all(validateRoutineId)
+  .all([validateUserId, validateDay, validateRoutineId])
   .get(routineController.getUserActivityByDayAndID)
   .patch(routineController.updateUserActivityByDayAndID)
   .delete(routineController.deleteUserActivityByDayAndID);
