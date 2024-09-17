@@ -31,6 +31,10 @@ const userSchema = new mongoose.Schema({
     lowercase: true,
     required: [true, 'Nationality is required!'],
   },
+  timeZone: {
+    type: String,
+    default: 'UTC',
+  },
   birthdate: {
     type: Date,
     required: [true, 'Birthdate is required!'],

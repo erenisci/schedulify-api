@@ -34,8 +34,10 @@ export const createActivity = async (userId: string, day: Day, activity: any) =>
     routine: routine._id,
     startTime: activity.startTime,
     endTime: activity.endTime,
+    duration: activity.duration,
     activity: activity.activity,
     category: activity.category,
+    isCompleted: activity.isCompleted,
     color: activity.color,
   });
 
@@ -74,8 +76,10 @@ export const updateActivity = async (
     routine: routine._id,
     startTime: updatedActivity.startTime || currentActivity.startTime,
     endTime: updatedActivity.endTime || currentActivity.endTime,
+    duration: updatedActivity.duration || currentActivity.duration,
     activity: updatedActivity.activity || currentActivity.activity,
     category: updatedActivity.category || currentActivity.category,
+    isCompleted: updatedActivity.isCompleted || currentActivity.isCompleted,
     color: updatedActivity.color || currentActivity.color,
     isTimeConflict: currentActivity.isTimeConflict,
   };

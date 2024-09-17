@@ -63,6 +63,7 @@ export const signup = catchAsync(async (req: Request, res: Response, next: NextF
   else req.body.nationality = countries[req.body.nationality];
 
   req.body.role = 'user';
+  req.body.timeZone = req.body.timeZone || 'UTC';
   const newUser = await User.create(req.body);
 
   const message = 'You have successfully signed up!';
@@ -81,6 +82,9 @@ export const login = catchAsync(async (req: Request, res: Response, next: NextFu
 
   if (!user.active)
     return next(new AppError('Your account is inactive. Please contact with support.', 403));
+
+  const userTimeZone = req.body.timeZone;
+  if (userTimeZone) await User.findByIdAndUpdate(user._id, { timeZone: userTimeZone });
 
   const message = 'You have successfully logged in!';
   createSendToken(user, message, 200, res);

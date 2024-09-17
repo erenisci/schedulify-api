@@ -30,6 +30,10 @@ const activitySchema = new mongoose.Schema({
     lowercase: true,
     enum: Object.values(Category),
   },
+  isCompleted: {
+    type: Boolean,
+    default: false,
+  },
   color: {
     type: String,
     default: '#fff', // will change

@@ -8,6 +8,7 @@ type IUser = Document & {
   surname: string;
   email: string;
   nationality: string;
+  timeZone: string;
   birthdate: Date;
   gender: string;
   password: string | undefined;

@@ -12,6 +12,7 @@ import routineRoute from './routes/routineRoute';
 import statsRoute from './routes/statRoute';
 import userRoute from './routes/userRoute';
 import AppError from './utils/appError';
+import resetCompletedActivities from './cronJobs/resetCompletedActivities';
 
 const app = express();
 
@@ -48,6 +49,9 @@ app.use(xssMiddleware);
 app.use('/api/v1/users', userRoute);
 app.use('/api/v1/routines', routineRoute);
 app.use('/api/v1/stats', statsRoute);
+
+// Reset completed activities per user
+resetCompletedActivities();
 
 app.all('*', (req, res, next) => {
   next(new AppError(`Can't find ${req.originalUrl} on this server`, 404));
