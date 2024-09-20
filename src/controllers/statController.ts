@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 
 import Activity from '../models/activityModel';
+import CompletedActivity from '../models/completedActivityModel';
 import Routine from '../models/routineModel';
 import User from '../models/userModel';
 import BirthdateStatsType from '../types/statTypes/birthdateStatsType';
@@ -9,7 +10,6 @@ import RegistrationStatsType from '../types/statTypes/registrationStatsType';
 import aggregatePagination from '../utils/aggregatePagination';
 import AppError from '../utils/appError';
 import catchAsync from '../utils/catchAsync';
-import CompletedActivity from '../models/completedActivityModel';
 
 export const getSummaryStats = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
