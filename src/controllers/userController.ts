@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 
+import { isValidDate } from '../helpers/userControllerHelper';
 import User from '../models/userModel';
 import IUser from '../types/modelTypes/userType';
 import APIFeatures from '../utils/apiFeatures';
@@ -20,6 +21,9 @@ export const getMe = catchAsync(async (req: Request, res: Response, next: NextFu
 });
 
 export const updateMe = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  if (req.body.birthdate && !isValidDate(req.body.birthdate))
+    return next(new AppError('Invalid birthdate provided!', 400));
+
   if (req.body.password || req.body.passwordConfirm)
     return next(
       new AppError('This route is not for password updates. Please use /updateMyPassword', 400)
@@ -86,7 +90,7 @@ export const getAllUsers = catchAsync(async (req: Request, res: Response, next: 
 });
 
 export const getUser = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-  const user = await User.findById(req.params.id).select('-password');
+  const user = await User.findById(req.params.userId).select('-password');
   if (!user) return next(new AppError('User not found!', 404));
 
   res.status(200).json({
@@ -97,6 +101,9 @@ export const getUser = catchAsync(async (req: Request, res: Response, next: Next
 
 // FOR SUPER-ADMINS!!
 export const createUser = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  if (!isValidDate(req.body.birthdate))
+    return next(new AppError('Invalid birthdate provided!', 400));
+
   const newUser = await User.create(req.body);
   newUser.password = undefined;
 
@@ -107,6 +114,9 @@ export const createUser = catchAsync(async (req: Request, res: Response, next: N
 });
 
 export const updateUser = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  if (req.body.birthdate && !isValidDate(req.body.birthdate))
+    return next(new AppError('Invalid birthdate provided!', 400));
+
   const filteredBody = filterObj(
     req.body,
     'name',
@@ -125,7 +135,7 @@ export const updateUser = catchAsync(async (req: Request, res: Response, next: N
       'name, surname, email, nationality, birthdate, gender, password or role.'
     );
 
-  const updatedUser = await User.findByIdAndUpdate(req.params.id, filteredBody, {
+  const updatedUser = await User.findByIdAndUpdate(req.params.userId, filteredBody, {
     new: true,
     runValidators: true,
   }).select('-password');
@@ -142,7 +152,7 @@ export const updateUser = catchAsync(async (req: Request, res: Response, next: N
 });
 
 export const deleteUser = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-  await User.findByIdAndUpdate(req.params.id, { active: false });
+  await User.findByIdAndUpdate(req.params.userId, { active: false });
 
   res.status(204).json({
     status: 'success',

@@ -7,8 +7,19 @@ import IActivity from '../types/modelTypes/activityType';
 import IRoutine from '../types/modelTypes/routineType';
 import AppError from '../utils/appError';
 
+const calculateDuration = (startTime: string, endTime: string): number => {
+  const start = new Date(`1970-01-01T${startTime}:00`);
+  const end = new Date(`1970-01-01T${endTime}:00`);
+
+  if (end <= start) {
+    throw new Error('End time must be after start time!');
+  }
+
+  return (end.getTime() - start.getTime()) / (1000 * 60);
+};
+
 export const getRoutineForUserOnDay = async (userId: string, day: string) => {
-  const routine = await Routine.findOne({ user: userId });
+  const routine = await Routine.findOne({ userId });
   if (!routine) throw new AppError(`No activity found for ${day}!`, 404);
 
   const activities = routine[day as keyof IRoutine] as IActivity[] | undefined;
@@ -19,11 +30,11 @@ export const getRoutineForUserOnDay = async (userId: string, day: string) => {
 };
 
 export const createActivity = async (userId: string, day: Day, activity: any) => {
-  let routine = await Routine.findOne({ user: userId });
+  let routine = await Routine.findOne({ userId });
 
   if (!routine) {
     routine = await Routine.create({
-      user: userId,
+      userId,
       allTimeActivities: 0,
       [day]: [],
     });
@@ -31,7 +42,8 @@ export const createActivity = async (userId: string, day: Day, activity: any) =>
 
   const newActivity = new Activity({
     _id: new mongoose.Types.ObjectId(),
-    routine: routine._id,
+    userId,
+    routineId: routine._id,
     startTime: activity.startTime,
     endTime: activity.endTime,
     duration: activity.duration,
@@ -62,7 +74,7 @@ export const updateActivity = async (
   activityId: string,
   updatedActivity: any
 ) => {
-  const routine = await Routine.findOne({ user: userId });
+  const routine = await Routine.findOne({ userId });
   if (!routine) throw new AppError('No routine found for this user!', 404);
 
   const activityIndex = routine[day].findIndex(activity => activity._id.toString() === activityId);
@@ -71,9 +83,17 @@ export const updateActivity = async (
 
   const currentActivity = routine[day][activityIndex];
 
+  if (updatedActivity.startTime || updatedActivity.endTime) {
+    const startTime = updatedActivity.startTime || currentActivity.startTime;
+    const endTime = updatedActivity.endTime || currentActivity.endTime;
+
+    updatedActivity.duration = calculateDuration(startTime, endTime);
+  }
+
   const updatedActivityWithConflictCheck: IActivity = {
     _id: currentActivity._id,
-    routine: routine._id,
+    userId: routine.userId,
+    routineId: routine._id,
     startTime: updatedActivity.startTime || currentActivity.startTime,
     endTime: updatedActivity.endTime || currentActivity.endTime,
     duration: updatedActivity.duration || currentActivity.duration,
@@ -86,7 +106,7 @@ export const updateActivity = async (
 
   for (const existingActivity of routine[day]) {
     if (
-      existingActivity._id.toString() !== activityId &&
+      String(existingActivity._id) !== activityId &&
       existingActivity.isTimeConflict(
         updatedActivityWithConflictCheck.startTime,
         updatedActivityWithConflictCheck.endTime

@@ -4,7 +4,12 @@ import Category from '../enums/categoryEnum';
 import IActivity from '../types/modelTypes/activityType';
 
 const activitySchema = new mongoose.Schema({
-  routine: {
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
+  },
+  routineId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Routine',
     required: true,

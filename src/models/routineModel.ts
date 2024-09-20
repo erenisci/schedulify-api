@@ -5,7 +5,7 @@ import IRoutine from '../types/modelTypes/routineType';
 import { activitySchema } from './activityModel';
 
 const routineSchema = new mongoose.Schema({
-  user: {
+  userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true,

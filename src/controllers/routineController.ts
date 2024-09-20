@@ -23,7 +23,7 @@ import { filterObj, filterObjError } from '../utils/filter';
 
 // FOR USERS
 export const getMyRoutines = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-  const routine = await Routine.findOne({ user: req.user.id });
+  const routine = await Routine.findOne({ userId: req.user.id });
   if (!routine || !routine.allTimeActivities) return next(new AppError('Routines not found!', 404));
 
   res.status(200).json({
@@ -35,7 +35,7 @@ export const getMyRoutines = catchAsync(async (req: Request, res: Response, next
 export const getMyActivities = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const day = req.params.day as Day;
-    const routine = await Routine.findOne({ user: req.user.id });
+    const routine = await Routine.findOne({ userId: req.user.id });
     if (!routine || !routine[day] || !routine[day].length)
       return next(new AppError(`No activity found for ${day}!`, 404));
 
@@ -67,7 +67,7 @@ export const createMyActivity = catchAsync(
 
 export const getMyActivity = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
   const day: Day = req.params.day as Day;
-  const routine = await Routine.findOne({ user: req.user.id });
+  const routine = await Routine.findOne({ userId: req.user.id });
   if (!routine || !routine[day]) return next(new AppError(`No activity found for ${day}!`, 404));
 
   const activityId = req.params.routineId;
@@ -116,7 +116,7 @@ export const updateMyActivity = catchAsync(
 export const deleteMyActivity = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const day = req.params.day as Day;
-    const routine = await Routine.findOne({ user: req.user.id });
+    const routine = await Routine.findOne({ userId: req.user.id });
     if (!routine) return next(new AppError(`No activity found for ${day}!`, 404));
 
     const activityId = req.params.routineId;
@@ -162,7 +162,7 @@ export const getAllRoutines = catchAsync(
 export const getUserRoutines = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const { userId } = req.params;
-    const routines = await Routine.find({ user: userId });
+    const routines = await Routine.find({ userId });
     if (!routines || !routines.length)
       return next(new AppError('No activity found for this user!', 404));
 
@@ -258,7 +258,7 @@ export const deleteUserActivityByDayAndID = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const { userId } = req.params;
     const day = req.params.day as Day;
-    let routine = await Routine.findOne({ user: userId });
+    let routine = await Routine.findOne({ userId });
     if (!routine || !(day in routine))
       return next(new AppError(`No activity found for ${day}!`, 404));
 

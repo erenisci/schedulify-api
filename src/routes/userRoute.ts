@@ -31,14 +31,14 @@ router.patch('/update-my-password', authController.updateMyPassword);
 router.use(authController.restrictTo('admin', 'super-admin'));
 
 router.get('/', userController.getAllUsers);
-router.get('/:id', validateUserId, userController.getUser);
+router.get('/:userId', validateUserId, userController.getUser);
 
 // FOR SUPER-ADMINS (Exclude Passwords)
 router.use(authController.restrictTo('super-admin'));
 
 router.post('/', validateNationality, userController.createUser);
 router
-  .route('/:id')
+  .route('/:userId')
   .all(validateUserId)
   .patch(validateNationality, userController.updateUser)
   .delete(userController.deleteUser);

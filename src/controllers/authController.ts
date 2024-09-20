@@ -9,6 +9,7 @@ import IUser from '../types/modelTypes/userType';
 import AppError from '../utils/appError';
 import catchAsync from '../utils/catchAsync';
 import sendEmail from '../utils/email';
+import { isValidDate } from '../helpers/userControllerHelper';
 
 export const restrictTo = (...roles: string[]) => {
   return (req: Request, res: Response, next: NextFunction) => {
@@ -62,6 +63,9 @@ export const signup = catchAsync(async (req: Request, res: Response, next: NextF
     return next(new AppError('Invalid nationality code! (Alpha-3)', 400));
   else req.body.nationality = countries[req.body.nationality];
 
+  if (!isValidDate(req.body.birthdate))
+    return next(new AppError('Invalid birthdate provided!', 400));
+
   req.body.role = 'user';
   req.body.timeZone = req.body.timeZone || 'UTC';
   const newUser = await User.create(req.body);
@@ -74,7 +78,7 @@ export const login = catchAsync(async (req: Request, res: Response, next: NextFu
   const { email, password } = req.body;
   if (!email || !password) return next(new AppError('Please provide email and password!', 400));
 
-  const user = await User.findOne({ email: email }).select('+password');
+  const user = await User.findOne({ email }).select('+password');
   if (!user || !user.password) return next(new AppError('Invalid email or password!', 401));
 
   const isPasswordCorrect = await user.correctPassword(password, user.password);

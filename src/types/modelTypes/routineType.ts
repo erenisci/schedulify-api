@@ -4,7 +4,7 @@ import IActivity from './activityType';
 
 type IRoutine = {
   _id: mongoose.Types.ObjectId;
-  user: mongoose.Types.ObjectId;
+  userId: mongoose.Types.ObjectId;
   allTimeActivities: number;
   monday: IActivity[];
   tuesday: IActivity[];
