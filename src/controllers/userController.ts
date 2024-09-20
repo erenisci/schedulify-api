@@ -152,7 +152,9 @@ export const updateUser = catchAsync(async (req: Request, res: Response, next: N
 });
 
 export const deleteUser = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-  await User.findByIdAndUpdate(req.params.userId, { active: false });
+  const user = await User.findByIdAndUpdate(req.params.userId, { active: false });
+
+  if (!user) return next(new AppError('User not found', 404));
 
   res.status(204).json({
     status: 'success',
