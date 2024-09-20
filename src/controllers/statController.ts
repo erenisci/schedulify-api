@@ -9,10 +9,50 @@ import RegistrationStatsType from '../types/statTypes/registrationStatsType';
 import aggregatePagination from '../utils/aggregatePagination';
 import AppError from '../utils/appError';
 import catchAsync from '../utils/catchAsync';
+import CompletedActivity from '../models/completedActivityModel';
 
 export const getSummaryStats = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    // At the end
+    const totalUsers = await User.countDocuments();
+    const totalActivities = await Activity.countDocuments();
+    const totalAllTimeActivities = await Routine.aggregate([
+      {
+        $group: {
+          _id: null,
+          totalActivities: { $sum: '$allTimeActivities' },
+        },
+      },
+    ]);
+    const totalCompletedActivities = await CompletedActivity.countDocuments();
+
+    const today = new Date();
+    const todayStart = new Date(today.setHours(0, 0, 0, 0));
+    const todayEnd = new Date(today.setHours(23, 59, 59, 999));
+
+    const newRegistrationsToday = await User.countDocuments({
+      createdAt: { $gte: todayStart, $lte: todayEnd },
+    });
+
+    const activitiesCompletedToday = await Activity.countDocuments({
+      isCompleted: true,
+      updatedAt: { $gte: todayStart, $lte: todayEnd },
+    });
+
+    const allTimeActivities = totalAllTimeActivities.length
+      ? totalAllTimeActivities[0].totalAllTimeActivities
+      : 0;
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        totalUsers,
+        activeActivities: totalActivities,
+        totalCompletedActivities,
+        allTimeActivities,
+        newRegistrationsToday,
+        activitiesCompletedToday,
+      },
+    });
   }
 );
 
