@@ -41,7 +41,7 @@ const activitySchema = new mongoose.Schema({
   },
   color: {
     type: String,
-    default: '#fff', // will change
+    default: '#374151',
     lowercase: true,
     validate: {
       validator: function (v: string) {
