@@ -1,5 +1,5 @@
-import cron from 'node-cron';
 import moment from 'moment-timezone';
+import cron from 'node-cron';
 
 import Activity from '../models/activityModel';
 import User from '../models/userModel';

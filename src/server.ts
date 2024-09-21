@@ -1,6 +1,7 @@
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 
+import app from './app';
 import AppError from './utils/appError';
 
 process.on('uncaughtException', (err: AppError) => {
@@ -10,7 +11,6 @@ process.on('uncaughtException', (err: AppError) => {
 });
 
 dotenv.config({ path: './config.env' });
-import app from './app';
 
 const DB = process.env.DATABASE!.replace('<PASSWORD>', process.env.DATABASE_PASSWORD!);
 

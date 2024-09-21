@@ -4,12 +4,12 @@ import jwt, { JwtPayload } from 'jsonwebtoken';
 
 import countries from '../data/countries';
 import User from '../models/userModel';
+import { isValidDate } from '../services/userService';
 import Cookie from '../types/cookieType';
 import IUser from '../types/modelTypes/userType';
 import AppError from '../utils/appError';
 import catchAsync from '../utils/catchAsync';
 import sendEmail from '../utils/email';
-import { isValidDate } from '../helpers/userControllerHelper';
 
 export const restrictTo = (...roles: string[]) => {
   return (req: Request, res: Response, next: NextFunction) => {

@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 
-import { isValidDate } from '../helpers/userControllerHelper';
 import User from '../models/userModel';
+import { isValidDate } from '../services/userService';
 import IUser from '../types/modelTypes/userType';
 import APIFeatures from '../utils/apiFeatures';
 import AppError from '../utils/appError';
