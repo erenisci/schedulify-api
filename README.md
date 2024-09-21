@@ -26,7 +26,7 @@ To get a copy of this project up and running on your local machine for developme
    ```bash
    git clone https://github.com/erenisci/schedulify-api
    ```
-2. Clone the repository:
+2. Navigate to the project directory:
    ```bash
    cd schedulify-api
    ```
@@ -35,7 +35,6 @@ To get a copy of this project up and running on your local machine for developme
    npm install
    ```
 4. Set up your environment variables in a config.env file: [.env.example](./.env.example)
-   &nbsp;
 5. Start the application:
    ```bash
    npm run dev
