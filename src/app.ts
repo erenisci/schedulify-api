@@ -7,12 +7,13 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 
 import errorController from './controllers/errorController';
-import resetCompletedActivities from './cronJobs/resetCompletedActivities';
 import xssMiddleware from './middlewares/xssMiddleware';
 import activityRoute from './routes/activityRoute';
+import feedbackTicketRoute from './routes/feedbackTicketRoute';
 import routineRoute from './routes/routineRoute';
 import statsRoute from './routes/statRoute';
 import userRoute from './routes/userRoute';
+import resetCompletedActivities from './scheduledJobs/resetCompletedActivities';
 import AppError from './utils/appError';
 
 const app = express();
@@ -50,6 +51,7 @@ app.use(xssMiddleware);
 app.use('/api/v1/users', userRoute);
 app.use('/api/v1/routines', routineRoute);
 app.use('/api/v1/activities', activityRoute);
+app.use('/api/v1/feedback-tickets', feedbackTicketRoute);
 app.use('/api/v1/stats', statsRoute);
 
 // Reset completed activities per user
