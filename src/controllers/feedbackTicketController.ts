@@ -1,35 +1,30 @@
 import { NextFunction, Request, Response } from 'express';
 
 import FeedbackTicket from '../models/feedbackTicketModel';
-import APIFeatures from '../utils/apiFeatures';
+import { getPaginationParams } from '../services/feedbackTicketService';
 import AppError from '../utils/appError';
 import catchAsync from '../utils/catchAsync';
 
 // FOR USERS
 export const getMyTickets = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
   const userId = req.user.id;
+  const { page, limit, skip } = getPaginationParams(req);
 
-  const features = new APIFeatures(
-    FeedbackTicket.find({ userId, type: 'ticket' }),
-    req.query,
-    FeedbackTicket
-  );
-
-  const { results: myTickets, totalPages, currentPage } = await features.paginate();
-
-  const totalTicketsCount = await FeedbackTicket.countDocuments({ type: 'ticket' });
+  const myTickets = await FeedbackTicket.find({ userId, type: 'ticket' }).skip(skip).limit(limit);
 
   if (!myTickets || myTickets.length === 0)
     return next(new AppError('No tickets found for your account!', 404));
 
+  const totalResults = await FeedbackTicket.countDocuments({ userId, type: 'ticket' });
+
   res.status(200).json({
     status: 'success',
-    currentPage,
-    totalPages,
+    currentPage: page,
+    totalPages: Math.ceil(totalResults / limit),
     pageResults: myTickets.length,
-    totalResults: totalTicketsCount,
+    totalResults,
     data: {
-      tickets: myTickets,
+      myTickets,
     },
   });
 });
@@ -57,27 +52,21 @@ export const createFeedbackTicket = catchAsync(
 
 // FOR ADMINS
 export const getTickets = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-  const features = new APIFeatures(FeedbackTicket.find(), req.query, FeedbackTicket);
+  const { page, limit, skip } = getPaginationParams(req);
 
-  const {
-    results: feedbackTickets,
-    totalPages,
-    currentPage,
-    totalResults,
-  } = await features.paginate();
+  const tickets = await FeedbackTicket.find({ type: 'ticket' }).skip(skip).limit(limit);
+  if (!tickets || tickets.length === 0) return next(new AppError('No ticket found!', 404));
 
-  if (!feedbackTickets || feedbackTickets.length === 0) {
-    return next(new AppError('No feedback or ticket found!', 404));
-  }
+  const totalResults = await FeedbackTicket.countDocuments({ type: 'ticket' });
 
   res.status(200).json({
     status: 'success',
-    currentPage,
-    totalPages,
-    pageResults: feedbackTickets.length,
+    currentPage: page,
+    totalPages: Math.ceil(totalResults / limit),
+    pageResults: tickets.length,
     totalResults,
     data: {
-      feedbackTickets,
+      tickets,
     },
   });
 });
@@ -126,32 +115,23 @@ export const markTicketAsUnclosed = catchAsync(
   }
 );
 
+// FOR SUPER-ADMINS
 export const getFeedbacks = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-  const features = new APIFeatures(
-    FeedbackTicket.find({ type: 'feedback' }),
-    req.query,
-    FeedbackTicket
-  );
+  const { page, limit, skip } = getPaginationParams(req);
 
-  const {
-    results: feedbackTickets,
-    totalPages,
-    currentPage,
-    totalResults,
-  } = await features.paginate();
+  const feedbacks = await FeedbackTicket.find({ type: 'feedback' }).skip(skip).limit(limit);
+  if (!feedbacks || feedbacks.length === 0) return next(new AppError('No feedback found!', 404));
 
-  if (!feedbackTickets || feedbackTickets.length === 0) {
-    return next(new AppError('No feedback found!', 404));
-  }
+  const totalResults = await FeedbackTicket.countDocuments({ type: 'feedback' });
 
   res.status(200).json({
     status: 'success',
-    currentPage,
-    totalPages,
-    pageResults: feedbackTickets.length,
+    currentPage: page,
+    totalPages: Math.ceil(totalResults / limit),
+    pageResults: feedbacks.length,
     totalResults,
     data: {
-      feedbackTickets,
+      feedbacks,
     },
   });
 });
