@@ -2,6 +2,7 @@ import express from 'express';
 
 import authController from '../controllers/authController';
 import feedbackTicketController from '../controllers/feedbackTicketController';
+import validateTicketId from '../middlewares/validateTicketId';
 
 const router = express.Router();
 
@@ -20,8 +21,16 @@ router.post('/', feedbackTicketController.createFeedbackTicket);
 router.use(authController.restrictTo('admin', 'super-admin'));
 
 router.get('/tickets', feedbackTicketController.getTickets);
-router.patch('/tickets/closed/:ticketId', feedbackTicketController.markTicketAsClosed);
-router.patch('/tickets/unclosed/:ticketId', feedbackTicketController.markTicketAsUnclosed);
+router.patch(
+  '/tickets/closed/:ticketId',
+  validateTicketId,
+  feedbackTicketController.markTicketAsClosed
+);
+router.patch(
+  '/tickets/unclosed/:ticketId',
+  validateTicketId,
+  feedbackTicketController.markTicketAsUnclosed
+);
 
 // FOR SUPER-ADMINS
 router.use(authController.restrictTo('super-admin'));
